@@ -1,0 +1,386 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Offres - Djezzy POS{% endblock %}
+
+{% block page_title %}Offres{% endblock %}
+
+{% block content %}
+<div x-data="offersManager()" x-init="fetchOffers()">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div class="flex flex-col sm:flex-row gap-4">
+            <!-- Search -->
+            <div class="relative">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="text"
+                       x-model="searchQuery"
+                       @input="filterOffers()"
+                       placeholder="Rechercher..."
+                       class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy w-full sm:w-64">
+            </div>
+
+            <!-- Status Filter -->
+            <select x-model="statusFilter" @change="filterOffers()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy">
+                <option value="">Toutes les offres</option>
+                <option value="active">Actives seulement</option>
+                <option value="featured">Mises en avant</option>
+            </select>
+        </div>
+
+        <!-- Add Button -->
+        <button @click="openCreateModal()"
+                class="bg-djezzy text-white px-4 py-2 rounded-lg hover:bg-djezzy-dark transition-colors flex items-center justify-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Ajouter une offre
+        </button>
+    </div>
+
+    <!-- Offers Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <!-- Loading State -->
+        <template x-if="loading">
+            <template x-for="i in 8" :key="i">
+                <div class="bg-white rounded-xl shadow-sm p-6 animate-pulse">
+                    <div class="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+                    <div class="h-8 bg-gray-200 rounded w-1/2 mb-4"></div>
+                    <div class="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+                </div>
+            </template>
+        </template>
+
+        <!-- Offers -->
+        <template x-for="offer in filteredOffers" :key="offer.id">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden" :class="{'ring-2 ring-djezzy': offer.is_featured}">
+                <!-- Header -->
+                <div class="px-6 py-4 bg-gradient-to-r from-djezzy to-djezzy-dark">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-white" x-text="offer.name"></h3>
+                        <span x-show="offer.is_featured" class="bg-white/20 text-white text-xs px-2 py-1 rounded-full">
+                            En avant
+                        </span>
+                    </div>
+                    <p class="text-white/80 text-sm" x-text="offer.code"></p>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6">
+                    <!-- Price -->
+                    <div class="text-center mb-4">
+                        <span class="text-3xl font-bold text-gray-900" x-text="Number(offer.price).toLocaleString('fr-FR')"></span>
+                        <span class="text-gray-500">DA</span>
+                        <span class="text-sm text-gray-500">/ <span x-text="offer.validity_days"></span> jours</span>
+                    </div>
+
+                    <!-- Features -->
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center text-sm text-gray-600">
+                            <svg class="w-4 h-4 mr-2 text-djezzy" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span x-text="formatData(offer.data_allowance_mb) + ' Internet'"></span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <svg class="w-4 h-4 mr-2 text-djezzy" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span x-text="offer.voice_minutes >= 99999 ? 'Appels illimites' : offer.voice_minutes + ' min'"></span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-600">
+                            <svg class="w-4 h-4 mr-2 text-djezzy" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span x-text="offer.sms_count + ' SMS'"></span>
+                        </div>
+                    </div>
+
+                    <!-- Toggles -->
+                    <div class="flex items-center justify-between py-3 border-t border-gray-200">
+                        <div class="flex items-center">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" :checked="offer.is_active" @change="toggleActive(offer)" class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                            </label>
+                            <span class="ml-2 text-xs text-gray-500">Active</span>
+                        </div>
+                        <div class="flex items-center">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" :checked="offer.is_featured" @change="toggleFeatured(offer)" class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-djezzy"></div>
+                            </label>
+                            <span class="ml-2 text-xs text-gray-500">En avant</span>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200">
+                        <button @click="openEditModal(offer)" class="p-2 text-gray-600 hover:text-djezzy rounded-lg hover:bg-gray-100">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                        </button>
+                        <button @click="confirmDelete(offer)" class="p-2 text-gray-600 hover:text-red-600 rounded-lg hover:bg-gray-100">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Empty State -->
+        <template x-if="!loading && filteredOffers.length === 0">
+            <div class="col-span-full text-center py-12 text-gray-500">
+                Aucune offre trouvee
+            </div>
+        </template>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <div x-show="showModal" x-transition class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="fixed inset-0 bg-black/50" @click="showModal = false"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full relative z-10 max-h-[90vh] overflow-y-auto" @click.stop>
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900" x-text="editingId ? 'Modifier l\'offre' : 'Ajouter une offre'"></h3>
+                </div>
+
+                <form @submit.prevent="saveOffer()" class="p-6 space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
+                            <input type="text" x-model="form.name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Code *</label>
+                            <input type="text" x-model="form.code" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea x-model="form.description" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Prix (DA) *</label>
+                            <input type="number" x-model="form.price" required min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Validite (jours) *</label>
+                            <input type="number" x-model="form.validity_days" required min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Data (Mo)</label>
+                            <input type="number" x-model="form.data_allowance_mb" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Minutes</label>
+                            <input type="number" x-model="form.voice_minutes" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">SMS</label>
+                            <input type="number" x-model="form.sms_count" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Caracteristiques (une par ligne)</label>
+                        <textarea x-model="featuresText" rows="3" placeholder="Appels illimites vers Djezzy&#10;Internet 4G&#10;SMS illimites" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy"></textarea>
+                    </div>
+
+                    <div class="flex items-center space-x-6">
+                        <label class="flex items-center">
+                            <input type="checkbox" x-model="form.is_active" class="w-4 h-4 text-djezzy border-gray-300 rounded focus:ring-djezzy">
+                            <span class="ml-2 text-sm text-gray-700">Active</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" x-model="form.is_featured" class="w-4 h-4 text-djezzy border-gray-300 rounded focus:ring-djezzy">
+                            <span class="ml-2 text-sm text-gray-700">Mise en avant</span>
+                        </label>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                        <button type="button" @click="showModal = false" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
+                            Annuler
+                        </button>
+                        <button type="submit" :disabled="saving" class="px-4 py-2 bg-djezzy text-white rounded-lg hover:bg-djezzy-dark">
+                            <span x-text="saving ? 'Enregistrement...' : 'Enregistrer'"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation -->
+    <div x-show="showDeleteModal" x-transition class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="fixed inset-0 bg-black/50" @click="showDeleteModal = false"></div>
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-xl shadow-xl max-w-sm w-full relative z-10 p-6" @click.stop>
+                <div class="text-center">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                        <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Supprimer l'offre</h3>
+                    <p class="text-sm text-gray-500 mb-6">Etes-vous sur de vouloir supprimer cette offre ?</p>
+                    <div class="flex justify-center space-x-3">
+                        <button @click="showDeleteModal = false" class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Annuler</button>
+                        <button @click="deleteOffer()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Supprimer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function offersManager() {
+    return {
+        offers: [],
+        filteredOffers: [],
+        loading: true,
+        saving: false,
+        showModal: false,
+        showDeleteModal: false,
+        searchQuery: '',
+        statusFilter: '',
+        editingId: null,
+        offerToDelete: null,
+        featuresText: '',
+        form: {
+            name: '',
+            code: '',
+            description: '',
+            price: 0,
+            data_allowance_mb: 0,
+            voice_minutes: 0,
+            sms_count: 0,
+            validity_days: 30,
+            is_active: true,
+            is_featured: false,
+            features: []
+        },
+
+        async fetchOffers() {
+            this.loading = true;
+            try {
+                const data = await api.get('/offers/');
+                this.offers = data.results || data;
+                this.filterOffers();
+            } catch (error) {
+                showToast('Erreur lors du chargement des offres', 'error');
+            }
+            this.loading = false;
+        },
+
+        filterOffers() {
+            this.filteredOffers = this.offers.filter(offer => {
+                const matchesSearch = !this.searchQuery ||
+                    offer.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                    offer.code.toLowerCase().includes(this.searchQuery.toLowerCase());
+
+                const matchesStatus = !this.statusFilter ||
+                    (this.statusFilter === 'active' && offer.is_active) ||
+                    (this.statusFilter === 'featured' && offer.is_featured);
+
+                return matchesSearch && matchesStatus;
+            });
+        },
+
+        openCreateModal() {
+            this.editingId = null;
+            this.form = { name: '', code: '', description: '', price: 0, data_allowance_mb: 0, voice_minutes: 0, sms_count: 0, validity_days: 30, is_active: true, is_featured: false, features: [] };
+            this.featuresText = '';
+            this.showModal = true;
+        },
+
+        openEditModal(offer) {
+            this.editingId = offer.id;
+            this.form = { ...offer };
+            this.featuresText = (offer.features || []).join('\n');
+            this.showModal = true;
+        },
+
+        async saveOffer() {
+            this.saving = true;
+            try {
+                this.form.features = this.featuresText.split('\n').filter(f => f.trim());
+                let response;
+                if (this.editingId) {
+                    response = await api.put(`/offers/${this.editingId}/`, this.form);
+                } else {
+                    response = await api.post('/offers/', this.form);
+                }
+                if (response.ok) {
+                    showToast(this.editingId ? 'Offre modifiee' : 'Offre creee', 'success');
+                    this.showModal = false;
+                    await this.fetchOffers();
+                } else {
+                    const error = await response.json();
+                    showToast(Object.values(error).flat().join(', '), 'error');
+                }
+            } catch (error) {
+                showToast('Erreur lors de l\'enregistrement', 'error');
+            }
+            this.saving = false;
+        },
+
+        async toggleActive(offer) {
+            try {
+                const response = await api.patch(`/offers/${offer.id}/`, { is_active: !offer.is_active });
+                if (response.ok) {
+                    offer.is_active = !offer.is_active;
+                    showToast(offer.is_active ? 'Offre activee' : 'Offre desactivee', 'success');
+                }
+            } catch (error) {
+                showToast('Erreur', 'error');
+            }
+        },
+
+        async toggleFeatured(offer) {
+            try {
+                const response = await api.patch(`/offers/${offer.id}/`, { is_featured: !offer.is_featured });
+                if (response.ok) {
+                    offer.is_featured = !offer.is_featured;
+                    showToast(offer.is_featured ? 'Offre mise en avant' : 'Offre retiree de la mise en avant', 'success');
+                }
+            } catch (error) {
+                showToast('Erreur', 'error');
+            }
+        },
+
+        confirmDelete(offer) {
+            this.offerToDelete = offer;
+            this.showDeleteModal = true;
+        },
+
+        async deleteOffer() {
+            try {
+                const response = await api.delete(`/offers/${this.offerToDelete.id}/`);
+                if (response.ok || response.status === 204) {
+                    showToast('Offre supprimee', 'success');
+                    this.showDeleteModal = false;
+                    await this.fetchOffers();
+                }
+            } catch (error) {
+                showToast('Erreur lors de la suppression', 'error');
+            }
+        }
+    };
+}
+</script>
+{% endblock %}

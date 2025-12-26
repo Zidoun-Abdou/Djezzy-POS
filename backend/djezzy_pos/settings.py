@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'apps.offers',
     'apps.phone_numbers',
     'apps.contracts',
+    'apps.dashboard',
 ]
 
 # Jazzmin Admin Theme Configuration

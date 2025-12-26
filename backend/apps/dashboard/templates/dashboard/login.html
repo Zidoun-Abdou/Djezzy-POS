@@ -1,0 +1,119 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Djezzy POS</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'djezzy': '#ED1C24',
+                        'djezzy-dark': '#C41820',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4">
+    <div class="w-full max-w-md" x-data="{ loading: false }">
+        <!-- Logo Card -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-djezzy px-8 py-6 text-center">
+                <h1 class="text-3xl font-bold text-white">Djezzy POS</h1>
+                <p class="text-white/80 mt-1">Tableau de bord</p>
+            </div>
+
+            <!-- Form -->
+            <form method="POST" action="{% url 'dashboard:login' %}" class="p-8" @submit="loading = true">
+                {% csrf_token %}
+
+                <h2 class="text-xl font-semibold text-gray-800 mb-6 text-center">Connexion</h2>
+
+                <!-- Error Message -->
+                {% if error %}
+                <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-red-700 text-sm">{{ error }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Username -->
+                <div class="mb-5">
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+                        Nom d'utilisateur
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                        </div>
+                        <input type="text"
+                               id="username"
+                               name="username"
+                               required
+                               autocomplete="username"
+                               class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy transition-colors"
+                               placeholder="Entrez votre nom d'utilisateur">
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                        Mot de passe
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                        </div>
+                        <input type="password"
+                               id="password"
+                               name="password"
+                               required
+                               autocomplete="current-password"
+                               class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy transition-colors"
+                               placeholder="Entrez votre mot de passe">
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit"
+                        :disabled="loading"
+                        :class="{ 'opacity-75 cursor-wait': loading }"
+                        class="w-full bg-djezzy text-white py-3 px-4 rounded-lg font-medium hover:bg-djezzy-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-djezzy transition-colors flex items-center justify-center">
+                    <template x-if="loading">
+                        <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </template>
+                    <span x-text="loading ? 'Connexion...' : 'Se connecter'"></span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <p class="text-center text-gray-500 text-sm mt-6">
+            &copy; 2024 Djezzy Algeria. Tous droits reserves.
+        </p>
+    </div>
+</body>
+</html>

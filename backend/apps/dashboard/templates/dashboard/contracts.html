@@ -1,0 +1,254 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Contrats - Djezzy POS{% endblock %}
+
+{% block page_title %}Contrats{% endblock %}
+
+{% block content %}
+<div x-data="contractsManager()" x-init="fetchContracts()">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input type="text"
+                   x-model="searchQuery"
+                   @input="filterContracts()"
+                   placeholder="Rechercher..."
+                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy w-full sm:w-64">
+        </div>
+    </div>
+
+    <!-- Status Tabs -->
+    <div class="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
+        <button @click="statusFilter = ''; filterContracts()"
+                :class="statusFilter === '' ? 'bg-white shadow' : 'hover:bg-white/50'"
+                class="px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            Tous
+        </button>
+        <button @click="statusFilter = 'draft'; filterContracts()"
+                :class="statusFilter === 'draft' ? 'bg-white shadow' : 'hover:bg-white/50'"
+                class="px-4 py-2 text-sm font-medium rounded-md transition-colors text-gray-600">
+            Brouillons
+        </button>
+        <button @click="statusFilter = 'signed'; filterContracts()"
+                :class="statusFilter === 'signed' ? 'bg-white shadow' : 'hover:bg-white/50'"
+                class="px-4 py-2 text-sm font-medium rounded-md transition-colors text-yellow-600">
+            Signes
+        </button>
+        <button @click="statusFilter = 'validated'; filterContracts()"
+                :class="statusFilter === 'validated' ? 'bg-white shadow' : 'hover:bg-white/50'"
+                class="px-4 py-2 text-sm font-medium rounded-md transition-colors text-green-600">
+            Valides
+        </button>
+        <button @click="statusFilter = 'cancelled'; filterContracts()"
+                :class="statusFilter === 'cancelled' ? 'bg-white shadow' : 'hover:bg-white/50'"
+                class="px-4 py-2 text-sm font-medium rounded-md transition-colors text-red-600">
+            Annules
+        </button>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">N° Contrat</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Offre</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Numero</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <!-- Loading -->
+                    <template x-if="loading">
+                        <tr>
+                            <td colspan="8" class="px-6 py-12 text-center">
+                                <div class="flex items-center justify-center">
+                                    <div class="spinner"></div>
+                                    <span class="ml-3 text-gray-500">Chargement...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+
+                    <!-- Empty -->
+                    <template x-if="!loading && filteredContracts.length === 0">
+                        <tr>
+                            <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                                Aucun contrat trouve
+                            </td>
+                        </tr>
+                    </template>
+
+                    <!-- Rows -->
+                    <template x-for="contract in filteredContracts" :key="contract.id">
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm font-medium text-djezzy" x-text="contract.contract_number"></span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900" x-text="contract.customer_first_name + ' ' + contract.customer_last_name"></div>
+                                <div class="text-xs text-gray-500" x-text="'NIN: ' + contract.customer_nin"></div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-gray-600" x-text="contract.offer_detail?.name || '-'"></span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm font-mono text-gray-600" x-text="contract.phone_number_detail?.formatted_number || '-'"></span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span :class="{
+                                    'bg-gray-100 text-gray-800': contract.status === 'draft',
+                                    'bg-yellow-100 text-yellow-800': contract.status === 'signed',
+                                    'bg-green-100 text-green-800': contract.status === 'validated',
+                                    'bg-red-100 text-red-800': contract.status === 'cancelled'
+                                }" class="px-2 py-1 text-xs font-medium rounded-full" x-text="getStatusLabel(contract.status)"></span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span x-show="contract.email_sent" class="text-green-500">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </span>
+                                <span x-show="!contract.email_sent" class="text-gray-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatDate(contract.created_at)"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <a :href="'/dashboard/contracts/' + contract.id + '/'" class="p-2 text-gray-600 hover:text-djezzy rounded-lg hover:bg-gray-100">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                    </a>
+                                    <div class="relative" x-data="{ open: false }">
+                                        <button @click="open = !open" class="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                                            </svg>
+                                        </button>
+                                        <div x-show="open" @click.away="open = false" x-transition
+                                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-10">
+                                            <template x-if="contract.status === 'draft'">
+                                                <button @click="changeStatus(contract, 'signed'); open = false"
+                                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100">
+                                                    Marquer comme signe
+                                                </button>
+                                            </template>
+                                            <template x-if="contract.status === 'signed'">
+                                                <button @click="changeStatus(contract, 'validated'); open = false"
+                                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100">
+                                                    Valider le contrat
+                                                </button>
+                                            </template>
+                                            <template x-if="contract.status !== 'cancelled'">
+                                                <button @click="changeStatus(contract, 'cancelled'); open = false"
+                                                        class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100">
+                                                    Annuler
+                                                </button>
+                                            </template>
+                                            <template x-if="!contract.email_sent && contract.customer_email">
+                                                <button @click="sendEmail(contract); open = false"
+                                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100">
+                                                    Envoyer par email
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function contractsManager() {
+    return {
+        contracts: [],
+        filteredContracts: [],
+        loading: true,
+        searchQuery: '',
+        statusFilter: '',
+
+        async fetchContracts() {
+            this.loading = true;
+            try {
+                const data = await api.get('/contracts/');
+                this.contracts = data.results || data;
+                this.filterContracts();
+            } catch (error) {
+                showToast('Erreur lors du chargement', 'error');
+            }
+            this.loading = false;
+        },
+
+        filterContracts() {
+            this.filteredContracts = this.contracts.filter(contract => {
+                const matchesSearch = !this.searchQuery ||
+                    contract.contract_number.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                    (contract.customer_first_name + ' ' + contract.customer_last_name).toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                    contract.customer_nin.includes(this.searchQuery);
+                const matchesStatus = !this.statusFilter || contract.status === this.statusFilter;
+                return matchesSearch && matchesStatus;
+            });
+        },
+
+        getStatusLabel(status) {
+            const labels = {
+                'draft': 'Brouillon',
+                'signed': 'Signe',
+                'validated': 'Valide',
+                'cancelled': 'Annule'
+            };
+            return labels[status] || status;
+        },
+
+        async changeStatus(contract, newStatus) {
+            try {
+                let response;
+                if (newStatus === 'signed') {
+                    response = await api.post(`/contracts/${contract.id}/sign/`, {});
+                } else {
+                    response = await api.patch(`/contracts/${contract.id}/`, { status: newStatus });
+                }
+                if (response.ok) {
+                    contract.status = newStatus;
+                    showToast('Statut mis a jour', 'success');
+                }
+            } catch (error) {
+                showToast('Erreur', 'error');
+            }
+        },
+
+        async sendEmail(contract) {
+            try {
+                const response = await api.post(`/contracts/${contract.id}/send_email/`, {});
+                if (response.ok) {
+                    contract.email_sent = true;
+                    showToast('Email envoye', 'success');
+                }
+            } catch (error) {
+                showToast('Erreur lors de l\'envoi', 'error');
+            }
+        }
+    };
+}
+</script>
+{% endblock %}

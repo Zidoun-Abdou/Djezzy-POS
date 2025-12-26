@@ -1,0 +1,258 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Numeros - Djezzy POS{% endblock %}
+
+{% block page_title %}Numeros de telephone{% endblock %}
+
+{% block content %}
+<div x-data="phoneNumbersManager()" x-init="fetchPhones()">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div class="flex flex-col sm:flex-row gap-4">
+            <!-- Search -->
+            <div class="relative">
+                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="text"
+                       x-model="searchQuery"
+                       @input="filterPhones()"
+                       placeholder="Rechercher un numero..."
+                       class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy w-full sm:w-64">
+            </div>
+        </div>
+
+        <!-- Bulk Actions -->
+        <div class="flex items-center gap-3" x-show="selectedIds.length > 0">
+            <span class="text-sm text-gray-600" x-text="selectedIds.length + ' selectionne(s)'"></span>
+            <select x-model="bulkAction" @change="bulkChangeStatus()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                <option value="">Actions groupees</option>
+                <option value="available">Marquer disponible</option>
+                <option value="reserved">Marquer reserve</option>
+                <option value="blocked">Marquer bloque</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Status Tabs -->
+    <div class="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
+        <button @click="statusFilter = ''; filterPhones()"
+                :class="statusFilter === '' ? 'bg-white shadow' : 'hover:bg-white/50'"
+                class="px-4 py-2 text-sm font-medium rounded-md transition-colors">
+            Tous
+            <span class="ml-1 text-xs text-gray-500" x-text="'(' + phones.length + ')'"></span>
+        </button>
+        <button @click="statusFilter = 'available'; filterPhones()"
+                :class="statusFilter === 'available' ? 'bg-white shadow' : 'hover:bg-white/50'"
+                class="px-4 py-2 text-sm font-medium rounded-md transition-colors text-green-600">
+            Disponibles
+            <span class="ml-1 text-xs" x-text="'(' + phones.filter(p => p.status === 'available').length + ')'"></span>
+        </button>
+        <button @click="statusFilter = 'assigned'; filterPhones()"
+                :class="statusFilter === 'assigned' ? 'bg-white shadow' : 'hover:bg-white/50'"
+                class="px-4 py-2 text-sm font-medium rounded-md transition-colors text-blue-600">
+            Attribues
+            <span class="ml-1 text-xs" x-text="'(' + phones.filter(p => p.status === 'assigned').length + ')'"></span>
+        </button>
+        <button @click="statusFilter = 'reserved'; filterPhones()"
+                :class="statusFilter === 'reserved' ? 'bg-white shadow' : 'hover:bg-white/50'"
+                class="px-4 py-2 text-sm font-medium rounded-md transition-colors text-yellow-600">
+            Reserves
+            <span class="ml-1 text-xs" x-text="'(' + phones.filter(p => p.status === 'reserved').length + ')'"></span>
+        </button>
+        <button @click="statusFilter = 'blocked'; filterPhones()"
+                :class="statusFilter === 'blocked' ? 'bg-white shadow' : 'hover:bg-white/50'"
+                class="px-4 py-2 text-sm font-medium rounded-md transition-colors text-red-600">
+            Bloques
+            <span class="ml-1 text-xs" x-text="'(' + phones.filter(p => p.status === 'blocked').length + ')'"></span>
+        </button>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left">
+                            <input type="checkbox"
+                                   @change="toggleSelectAll()"
+                                   :checked="selectedIds.length > 0 && selectedIds.length === filteredPhones.length"
+                                   class="w-4 h-4 text-djezzy border-gray-300 rounded focus:ring-djezzy">
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Numero</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Offre</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attribue a</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <!-- Loading -->
+                    <template x-if="loading">
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center">
+                                <div class="flex items-center justify-center">
+                                    <div class="spinner"></div>
+                                    <span class="ml-3 text-gray-500">Chargement...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+
+                    <!-- Empty -->
+                    <template x-if="!loading && filteredPhones.length === 0">
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                                Aucun numero trouve
+                            </td>
+                        </tr>
+                    </template>
+
+                    <!-- Rows -->
+                    <template x-for="phone in filteredPhones" :key="phone.id">
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4">
+                                <input type="checkbox"
+                                       :value="phone.id"
+                                       x-model="selectedIds"
+                                       class="w-4 h-4 text-djezzy border-gray-300 rounded focus:ring-djezzy">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm font-mono font-medium text-gray-900" x-text="phone.formatted_number || phone.number"></span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-gray-600" x-text="phone.offer?.name || '-'"></span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span :class="{
+                                    'bg-green-100 text-green-800': phone.status === 'available',
+                                    'bg-blue-100 text-blue-800': phone.status === 'assigned',
+                                    'bg-yellow-100 text-yellow-800': phone.status === 'reserved',
+                                    'bg-red-100 text-red-800': phone.status === 'blocked'
+                                }" class="px-2 py-1 text-xs font-medium rounded-full" x-text="getStatusLabel(phone.status)"></span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="phone.assigned_to_name || '-'"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="phone.assigned_date ? formatDate(phone.assigned_date) : '-'"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="relative" x-data="{ open: false }">
+                                    <button @click="open = !open" class="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
+                                        </svg>
+                                    </button>
+                                    <div x-show="open" @click.away="open = false" x-transition
+                                         class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-10">
+                                        <button @click="changeStatus(phone, 'available'); open = false"
+                                                class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                            Disponible
+                                        </button>
+                                        <button @click="changeStatus(phone, 'reserved'); open = false"
+                                                class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                                            <span class="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+                                            Reserve
+                                        </button>
+                                        <button @click="changeStatus(phone, 'blocked'); open = false"
+                                                class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center">
+                                            <span class="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                                            Bloque
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function phoneNumbersManager() {
+    return {
+        phones: [],
+        filteredPhones: [],
+        loading: true,
+        searchQuery: '',
+        statusFilter: '',
+        selectedIds: [],
+        bulkAction: '',
+
+        async fetchPhones() {
+            this.loading = true;
+            try {
+                const data = await api.get('/phone-numbers/');
+                this.phones = data.results || data;
+                this.filterPhones();
+            } catch (error) {
+                showToast('Erreur lors du chargement', 'error');
+            }
+            this.loading = false;
+        },
+
+        filterPhones() {
+            this.filteredPhones = this.phones.filter(phone => {
+                const matchesSearch = !this.searchQuery ||
+                    phone.number.includes(this.searchQuery) ||
+                    (phone.assigned_to_name && phone.assigned_to_name.toLowerCase().includes(this.searchQuery.toLowerCase()));
+                const matchesStatus = !this.statusFilter || phone.status === this.statusFilter;
+                return matchesSearch && matchesStatus;
+            });
+        },
+
+        getStatusLabel(status) {
+            const labels = {
+                'available': 'Disponible',
+                'assigned': 'Attribue',
+                'reserved': 'Reserve',
+                'blocked': 'Bloque'
+            };
+            return labels[status] || status;
+        },
+
+        toggleSelectAll() {
+            if (this.selectedIds.length === this.filteredPhones.length) {
+                this.selectedIds = [];
+            } else {
+                this.selectedIds = this.filteredPhones.map(p => p.id);
+            }
+        },
+
+        async changeStatus(phone, newStatus) {
+            try {
+                const response = await api.patch(`/phone-numbers/${phone.id}/`, { status: newStatus });
+                if (response.ok) {
+                    phone.status = newStatus;
+                    showToast('Statut mis a jour', 'success');
+                }
+            } catch (error) {
+                showToast('Erreur', 'error');
+            }
+        },
+
+        async bulkChangeStatus() {
+            if (!this.bulkAction || this.selectedIds.length === 0) return;
+
+            const promises = this.selectedIds.map(id =>
+                api.patch(`/phone-numbers/${id}/`, { status: this.bulkAction })
+            );
+
+            try {
+                await Promise.all(promises);
+                showToast(`${this.selectedIds.length} numeros mis a jour`, 'success');
+                this.selectedIds = [];
+                this.bulkAction = '';
+                await this.fetchPhones();
+            } catch (error) {
+                showToast('Erreur lors de la mise a jour', 'error');
+            }
+        }
+    };
+}
+</script>
+{% endblock %}

@@ -1,0 +1,309 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Tableau de bord - Djezzy POS{% endblock %}
+
+{% block content %}
+<div x-data="dashboardStats()" x-init="fetchStats()">
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Users Card -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Utilisateurs</p>
+                    <template x-if="loading">
+                        <div class="h-8 w-16 bg-gray-200 rounded animate-pulse mt-1"></div>
+                    </template>
+                    <template x-if="!loading">
+                        <p class="text-2xl font-bold text-gray-900" x-text="stats.users.total"></p>
+                    </template>
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-4 text-xs text-gray-500" x-show="!loading">
+                <span><span class="font-medium text-gray-700" x-text="stats.users.agents"></span> Agents</span>
+                <span><span class="font-medium text-gray-700" x-text="stats.users.managers"></span> Managers</span>
+            </div>
+        </div>
+
+        <!-- Offers Card -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-djezzy/10 text-djezzy">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Offres</p>
+                    <template x-if="loading">
+                        <div class="h-8 w-16 bg-gray-200 rounded animate-pulse mt-1"></div>
+                    </template>
+                    <template x-if="!loading">
+                        <p class="text-2xl font-bold text-gray-900" x-text="stats.offers.total"></p>
+                    </template>
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-4 text-xs text-gray-500" x-show="!loading">
+                <span><span class="font-medium text-green-600" x-text="stats.offers.active"></span> Actives</span>
+                <span><span class="font-medium text-yellow-600" x-text="stats.offers.featured"></span> Mises en avant</span>
+            </div>
+        </div>
+
+        <!-- Phone Numbers Card -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Numeros</p>
+                    <template x-if="loading">
+                        <div class="h-8 w-16 bg-gray-200 rounded animate-pulse mt-1"></div>
+                    </template>
+                    <template x-if="!loading">
+                        <p class="text-2xl font-bold text-gray-900" x-text="stats.phones.total"></p>
+                    </template>
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-4 text-xs text-gray-500" x-show="!loading">
+                <span><span class="font-medium text-green-600" x-text="stats.phones.available"></span> Disponibles</span>
+                <span><span class="font-medium text-blue-600" x-text="stats.phones.assigned"></span> Attribues</span>
+            </div>
+        </div>
+
+        <!-- Contracts Card -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Contrats</p>
+                    <template x-if="loading">
+                        <div class="h-8 w-16 bg-gray-200 rounded animate-pulse mt-1"></div>
+                    </template>
+                    <template x-if="!loading">
+                        <p class="text-2xl font-bold text-gray-900" x-text="stats.contracts.total"></p>
+                    </template>
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-4 text-xs text-gray-500" x-show="!loading">
+                <span><span class="font-medium text-yellow-600" x-text="stats.contracts.signed"></span> Signes</span>
+                <span><span class="font-medium text-green-600" x-text="stats.contracts.validated"></span> Valides</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Phone Numbers Status -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Statut des numeros</h3>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Disponibles</span>
+                    <div class="flex items-center">
+                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-green-500 h-2 rounded-full" :style="'width: ' + stats.phones.availablePercent + '%'"></div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900" x-text="stats.phones.available"></span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Attribues</span>
+                    <div class="flex items-center">
+                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-blue-500 h-2 rounded-full" :style="'width: ' + stats.phones.assignedPercent + '%'"></div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900" x-text="stats.phones.assigned"></span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Reserves</span>
+                    <div class="flex items-center">
+                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-yellow-500 h-2 rounded-full" :style="'width: ' + stats.phones.reservedPercent + '%'"></div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900" x-text="stats.phones.reserved"></span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Bloques</span>
+                    <div class="flex items-center">
+                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-red-500 h-2 rounded-full" :style="'width: ' + stats.phones.blockedPercent + '%'"></div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900" x-text="stats.phones.blocked"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contract Status -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Statut des contrats</h3>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Brouillons</span>
+                    <div class="flex items-center">
+                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-gray-500 h-2 rounded-full" :style="'width: ' + stats.contracts.draftPercent + '%'"></div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900" x-text="stats.contracts.draft"></span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Signes</span>
+                    <div class="flex items-center">
+                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-yellow-500 h-2 rounded-full" :style="'width: ' + stats.contracts.signedPercent + '%'"></div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900" x-text="stats.contracts.signed"></span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Valides</span>
+                    <div class="flex items-center">
+                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-green-500 h-2 rounded-full" :style="'width: ' + stats.contracts.validatedPercent + '%'"></div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900" x-text="stats.contracts.validated"></span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Annules</span>
+                    <div class="flex items-center">
+                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
+                            <div class="bg-red-500 h-2 rounded-full" :style="'width: ' + stats.contracts.cancelledPercent + '%'"></div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900" x-text="stats.contracts.cancelled"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <a href="{% url 'dashboard:users' %}" class="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow flex items-center">
+            <div class="p-2 rounded-lg bg-blue-100 text-blue-600 mr-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Gerer les utilisateurs</span>
+        </a>
+        <a href="{% url 'dashboard:offers' %}" class="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow flex items-center">
+            <div class="p-2 rounded-lg bg-djezzy/10 text-djezzy mr-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Ajouter une offre</span>
+        </a>
+        <a href="{% url 'dashboard:phone_numbers' %}" class="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow flex items-center">
+            <div class="p-2 rounded-lg bg-green-100 text-green-600 mr-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Voir les numeros</span>
+        </a>
+        <a href="{% url 'dashboard:contracts' %}" class="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow flex items-center">
+            <div class="p-2 rounded-lg bg-purple-100 text-purple-600 mr-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Voir les contrats</span>
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function dashboardStats() {
+    return {
+        loading: true,
+        stats: {
+            users: { total: 0, agents: 0, managers: 0 },
+            offers: { total: 0, active: 0, featured: 0 },
+            phones: { total: 0, available: 0, assigned: 0, reserved: 0, blocked: 0, availablePercent: 0, assignedPercent: 0, reservedPercent: 0, blockedPercent: 0 },
+            contracts: { total: 0, draft: 0, signed: 0, validated: 0, cancelled: 0, draftPercent: 0, signedPercent: 0, validatedPercent: 0, cancelledPercent: 0 }
+        },
+
+        async fetchStats() {
+            this.loading = true;
+            try {
+                const [users, offers, phones, contractStats] = await Promise.all([
+                    api.get('/user/'),
+                    api.get('/offers/'),
+                    api.get('/phone-numbers/'),
+                    api.get('/contracts/stats/')
+                ]);
+
+                // Process users
+                const userList = users.results || users;
+                this.stats.users.total = userList.length;
+                this.stats.users.agents = userList.filter(u => u.role === 'agent').length;
+                this.stats.users.managers = userList.filter(u => u.role === 'manager').length;
+
+                // Process offers
+                const offerList = offers.results || offers;
+                this.stats.offers.total = offerList.length;
+                this.stats.offers.active = offerList.filter(o => o.is_active).length;
+                this.stats.offers.featured = offerList.filter(o => o.is_featured).length;
+
+                // Process phones
+                const phoneList = phones.results || phones;
+                this.stats.phones.total = phoneList.length;
+                this.stats.phones.available = phoneList.filter(p => p.status === 'available').length;
+                this.stats.phones.assigned = phoneList.filter(p => p.status === 'assigned').length;
+                this.stats.phones.reserved = phoneList.filter(p => p.status === 'reserved').length;
+                this.stats.phones.blocked = phoneList.filter(p => p.status === 'blocked').length;
+
+                // Calculate percentages
+                if (this.stats.phones.total > 0) {
+                    this.stats.phones.availablePercent = (this.stats.phones.available / this.stats.phones.total * 100).toFixed(0);
+                    this.stats.phones.assignedPercent = (this.stats.phones.assigned / this.stats.phones.total * 100).toFixed(0);
+                    this.stats.phones.reservedPercent = (this.stats.phones.reserved / this.stats.phones.total * 100).toFixed(0);
+                    this.stats.phones.blockedPercent = (this.stats.phones.blocked / this.stats.phones.total * 100).toFixed(0);
+                }
+
+                // Process contracts
+                this.stats.contracts.total = contractStats.total || 0;
+                const byStatus = contractStats.by_status || {};
+                this.stats.contracts.draft = byStatus.draft || 0;
+                this.stats.contracts.signed = byStatus.signed || 0;
+                this.stats.contracts.validated = byStatus.validated || 0;
+                this.stats.contracts.cancelled = byStatus.cancelled || 0;
+
+                // Calculate contract percentages
+                if (this.stats.contracts.total > 0) {
+                    this.stats.contracts.draftPercent = (this.stats.contracts.draft / this.stats.contracts.total * 100).toFixed(0);
+                    this.stats.contracts.signedPercent = (this.stats.contracts.signed / this.stats.contracts.total * 100).toFixed(0);
+                    this.stats.contracts.validatedPercent = (this.stats.contracts.validated / this.stats.contracts.total * 100).toFixed(0);
+                    this.stats.contracts.cancelledPercent = (this.stats.contracts.cancelled / this.stats.contracts.total * 100).toFixed(0);
+                }
+
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+                showToast('Erreur lors du chargement des statistiques', 'error');
+            }
+            this.loading = false;
+        }
+    };
+}
+</script>
+{% endblock %}
