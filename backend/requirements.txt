@@ -6,6 +6,9 @@ djangorestframework-simplejwt>=5.3.1
 python-dotenv>=1.0.0
 Pillow>=9.0.0
 
+# Admin theme
+django-jazzmin>=2.6.0
+
 # Production dependencies
 gunicorn>=21.2.0
 psycopg2-binary>=2.9.9

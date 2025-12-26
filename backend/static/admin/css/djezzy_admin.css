@@ -1,0 +1,302 @@
+/* Djezzy POS Admin Custom Styles */
+/* Matches the mobile app's modern design */
+
+/* Djezzy Brand Colors */
+:root {
+    --djezzy-red: #ED1C24;
+    --djezzy-dark-red: #C41820;
+    --djezzy-light-bg: #F5F5F5;
+    --djezzy-gradient: linear-gradient(135deg, #ED1C24 0%, #C41820 100%);
+}
+
+/* Login page styling */
+.login-box {
+    border-radius: 20px !important;
+    box-shadow: 0 4px 20px rgba(237, 28, 36, 0.2) !important;
+    overflow: hidden;
+}
+
+.login-box .card {
+    border-radius: 20px !important;
+}
+
+.login-logo a {
+    color: var(--djezzy-red) !important;
+    font-weight: bold !important;
+}
+
+/* Cards with rounded corners like mobile app */
+.card {
+    border-radius: 16px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    border: none !important;
+}
+
+.card-header {
+    border-radius: 16px 16px 0 0 !important;
+}
+
+/* Main content area */
+.content-wrapper {
+    background-color: #f8f9fa !important;
+}
+
+/* Buttons with Djezzy gradient style */
+.btn-danger,
+.btn-primary,
+.bg-danger {
+    background: var(--djezzy-gradient) !important;
+    border: none !important;
+    border-radius: 12px !important;
+}
+
+.btn-danger:hover,
+.btn-primary:hover {
+    background: linear-gradient(135deg, #C41820 0%, #a01018 100%) !important;
+    box-shadow: 0 4px 12px rgba(237, 28, 36, 0.4) !important;
+}
+
+/* Sidebar styling */
+.nav-sidebar .nav-link.active {
+    background: var(--djezzy-gradient) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(237, 28, 36, 0.3) !important;
+}
+
+.nav-sidebar .nav-link:hover {
+    background-color: rgba(237, 28, 36, 0.1) !important;
+    border-radius: 8px !important;
+}
+
+.sidebar-dark-danger .nav-sidebar > .nav-item > .nav-link.active {
+    background: var(--djezzy-gradient) !important;
+}
+
+/* Navbar brand */
+.brand-link {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Table styling */
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(237, 28, 36, 0.03) !important;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(237, 28, 36, 0.08) !important;
+}
+
+.table thead th {
+    background-color: var(--djezzy-light-bg) !important;
+    border-bottom: 2px solid var(--djezzy-red) !important;
+}
+
+/* Form inputs */
+.form-control:focus {
+    border-color: var(--djezzy-red) !important;
+    box-shadow: 0 0 0 0.2rem rgba(237, 28, 36, 0.25) !important;
+}
+
+.form-control {
+    border-radius: 10px !important;
+}
+
+/* Select2 dropdowns */
+.select2-container--default .select2-selection--single {
+    border-radius: 10px !important;
+}
+
+.select2-container--default .select2-selection--single:focus {
+    border-color: var(--djezzy-red) !important;
+}
+
+/* Pagination */
+.page-item.active .page-link {
+    background: var(--djezzy-gradient) !important;
+    border-color: var(--djezzy-red) !important;
+}
+
+.page-link {
+    color: var(--djezzy-red) !important;
+    border-radius: 8px !important;
+    margin: 0 2px !important;
+}
+
+.page-link:hover {
+    background-color: rgba(237, 28, 36, 0.1) !important;
+}
+
+/* Badges */
+.badge-danger,
+.badge.bg-danger {
+    background: var(--djezzy-gradient) !important;
+}
+
+/* Info boxes on dashboard */
+.info-box {
+    border-radius: 16px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.info-box-icon {
+    border-radius: 16px 0 0 16px !important;
+}
+
+.bg-danger .info-box-icon,
+.info-box-icon.bg-danger {
+    background: var(--djezzy-gradient) !important;
+}
+
+/* Small box widgets */
+.small-box {
+    border-radius: 16px !important;
+    overflow: hidden;
+}
+
+.small-box.bg-danger {
+    background: var(--djezzy-gradient) !important;
+}
+
+/* Modal styling */
+.modal-content {
+    border-radius: 16px !important;
+    border: none !important;
+}
+
+.modal-header {
+    border-radius: 16px 16px 0 0 !important;
+}
+
+/* Alerts */
+.alert {
+    border-radius: 12px !important;
+}
+
+.alert-danger,
+.alert-error {
+    background: rgba(237, 28, 36, 0.1) !important;
+    border-color: var(--djezzy-red) !important;
+    color: var(--djezzy-dark-red) !important;
+}
+
+/* Dropdown menus */
+.dropdown-menu {
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    border: none !important;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(237, 28, 36, 0.1) !important;
+}
+
+.dropdown-item.active,
+.dropdown-item:active {
+    background: var(--djezzy-gradient) !important;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    background-color: transparent !important;
+}
+
+.breadcrumb-item.active {
+    color: var(--djezzy-red) !important;
+}
+
+/* Links */
+a {
+    color: var(--djezzy-red);
+}
+
+a:hover {
+    color: var(--djezzy-dark-red);
+}
+
+/* Checkbox and radio custom styling */
+.custom-control-input:checked ~ .custom-control-label::before {
+    background-color: var(--djezzy-red) !important;
+    border-color: var(--djezzy-red) !important;
+}
+
+/* Switch toggle */
+.custom-switch .custom-control-input:checked ~ .custom-control-label::before {
+    background-color: var(--djezzy-red) !important;
+}
+
+/* Progress bars */
+.progress-bar {
+    background: var(--djezzy-gradient) !important;
+}
+
+/* Footer */
+.main-footer {
+    border-top: 2px solid rgba(237, 28, 36, 0.1) !important;
+}
+
+/* Calendar/Date widgets */
+.datepicker .datepicker-switch:hover,
+.datepicker .prev:hover,
+.datepicker .next:hover,
+.datepicker tfoot tr th:hover {
+    background: rgba(237, 28, 36, 0.1) !important;
+}
+
+.datepicker table tr td.active,
+.datepicker table tr td.active:hover {
+    background: var(--djezzy-gradient) !important;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--djezzy-red);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--djezzy-dark-red);
+}
+
+/* Status badge colors matching mobile app */
+.badge-success {
+    background-color: #28a745 !important;
+}
+
+.badge-warning {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+}
+
+.badge-info {
+    background-color: #007bff !important;
+}
+
+/* Action buttons in list view */
+.actions select {
+    border-radius: 10px !important;
+}
+
+/* Collapsible fieldsets */
+fieldset.collapsed .collapse-toggle {
+    color: var(--djezzy-red) !important;
+}
+
+/* Tab styling */
+.nav-tabs .nav-link.active {
+    border-bottom: 3px solid var(--djezzy-red) !important;
+    color: var(--djezzy-red) !important;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: transparent transparent var(--djezzy-red) transparent !important;
+}
