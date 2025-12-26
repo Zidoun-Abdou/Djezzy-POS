@@ -6,18 +6,19 @@ from .models import PhoneNumber
 @admin.register(PhoneNumber)
 class PhoneNumberAdmin(admin.ModelAdmin):
     list_display = [
-        'formatted_number_display', 'status_badge', 'assigned_to_name',
+        'formatted_number_display', 'offer', 'status_badge', 'assigned_to_name',
         'assigned_to_nin', 'assigned_date'
     ]
-    list_filter = ['status', 'assigned_date']
-    search_fields = ['number', 'assigned_to_name', 'assigned_to_nin']
+    list_filter = ['status', 'offer', 'assigned_date']
+    search_fields = ['number', 'assigned_to_name', 'assigned_to_nin', 'offer__name']
     list_editable = []
     ordering = ['number']
     readonly_fields = ['formatted_number_display', 'created_at', 'updated_at']
+    autocomplete_fields = ['offer']
 
     fieldsets = [
         ('Numero', {
-            'fields': ['number', 'formatted_number_display', 'status']
+            'fields': ['number', 'formatted_number_display', 'offer', 'status']
         }),
         ('Attribution', {
             'fields': ['assigned_to_name', 'assigned_to_nin', 'assigned_date'],

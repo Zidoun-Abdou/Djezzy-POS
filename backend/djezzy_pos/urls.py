@@ -21,6 +21,7 @@ urlpatterns = [
     # API endpoints
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/user/', include('apps.accounts.urls')),
     path('api/offers/', include('apps.offers.urls')),
     path('api/phone-numbers/', include('apps.phone_numbers.urls')),
     path('api/contracts/', include('apps.contracts.urls')),
