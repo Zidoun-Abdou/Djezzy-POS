@@ -1,10 +1,10 @@
 import 'dart:typed_data';
-import 'djezzy_offer.dart';
+import '../services/api_service.dart';
 
 /// Contract data that flows through the entire workflow
 class ContractData {
-  final DjezzyOffer selectedOffer;
-  final String selectedPhoneNumber;
+  final OfferData selectedOffer;
+  final PhoneNumberData selectedPhoneNumber;
   final Map<String, dynamic>? userData;
   final Uint8List? signatureImage;
   final DateTime contractDate;
@@ -30,8 +30,8 @@ class ContractData {
 
   /// Create a copy with updated fields
   ContractData copyWith({
-    DjezzyOffer? selectedOffer,
-    String? selectedPhoneNumber,
+    OfferData? selectedOffer,
+    PhoneNumberData? selectedPhoneNumber,
     Map<String, dynamic>? userData,
     Uint8List? signatureImage,
     DateTime? contractDate,
@@ -54,7 +54,12 @@ class ContractData {
 
   /// Get formatted phone number (0770 12 34 56)
   String get formattedPhoneNumber {
-    return DjezzyOffer.formatPhoneNumber(selectedPhoneNumber);
+    return selectedPhoneNumber.formattedNumber;
+  }
+
+  /// Get raw phone number
+  String get phoneNumberRaw {
+    return selectedPhoneNumber.number;
   }
 
   /// Get customer full name from userData

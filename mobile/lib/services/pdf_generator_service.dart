@@ -3,7 +3,6 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:flutter/services.dart' show rootBundle;
 import '../models/contract_data.dart';
-import '../models/djezzy_offer.dart';
 
 class PDFGeneratorService {
   static Future<Uint8List> generateContract(ContractData contractData) async {
@@ -206,8 +205,7 @@ class PDFGeneratorService {
 
   static pw.Widget _buildOfferTable(ContractData contractData) {
     final offer = contractData.selectedOffer;
-    final formattedNumber =
-        DjezzyOffer.formatPhoneNumber(contractData.selectedPhoneNumber);
+    final formattedNumber = contractData.formattedPhoneNumber;
 
     return pw.Container(
       padding: const pw.EdgeInsets.all(16),

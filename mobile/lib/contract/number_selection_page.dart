@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import '../models/djezzy_offer.dart';
+import '../services/api_service.dart';
 import '../models/contract_data.dart';
 import 'scan_intro_page.dart';
 
 class NumberSelectionPage extends StatefulWidget {
   final List<CameraDescription> cameras;
-  final DjezzyOffer selectedOffer;
+  final OfferData selectedOffer;
 
   const NumberSelectionPage({
     super.key,
@@ -22,10 +22,11 @@ class _NumberSelectionPageState extends State<NumberSelectionPage>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
-  late List<AnimationController> _cardControllers;
-  late List<Animation<double>> _cardAnimations;
+  List<AnimationController> _cardControllers = [];
+  List<Animation<double>> _cardAnimations = [];
 
-  String? _selectedNumber;
+  PhoneNumberData? _selectedNumber;
+  List<PhoneNumberData> _phoneNumbers = [];
 
   @override
   void initState() {
@@ -40,8 +41,21 @@ class _NumberSelectionPageState extends State<NumberSelectionPage>
       curve: Curves.easeIn,
     );
 
+    // Use phone numbers from the offer
+    _phoneNumbers = widget.selectedOffer.availablePhoneNumbers;
+    _initializeCardAnimations();
+
+    _fadeController.forward();
+  }
+
+  void _initializeCardAnimations() {
+    // Dispose old controllers
+    for (var controller in _cardControllers) {
+      controller.dispose();
+    }
+
     _cardControllers = List.generate(
-      DjezzyOffer.availablePhoneNumbers.length,
+      _phoneNumbers.length,
       (index) => AnimationController(
         duration: Duration(milliseconds: 400 + (index * 80)),
         vsync: this,
@@ -55,7 +69,6 @@ class _NumberSelectionPageState extends State<NumberSelectionPage>
             ))
         .toList();
 
-    _fadeController.forward();
     for (var controller in _cardControllers) {
       controller.forward();
     }
@@ -70,9 +83,9 @@ class _NumberSelectionPageState extends State<NumberSelectionPage>
     super.dispose();
   }
 
-  void _selectNumber(String number) {
+  void _selectNumber(PhoneNumberData phone) {
     setState(() {
-      _selectedNumber = number;
+      _selectedNumber = phone;
     });
   }
 
@@ -191,20 +204,31 @@ class _NumberSelectionPageState extends State<NumberSelectionPage>
 
               // Phone Numbers List
               Expanded(
-                child: ListView.builder(
+                child: _phoneNumbers.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'Aucun numéro disponible pour cette offre',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.black54,
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   physics: const BouncingScrollPhysics(),
-                  itemCount: DjezzyOffer.availablePhoneNumbers.length,
+                  itemCount: _phoneNumbers.length,
                   itemBuilder: (context, index) {
-                    final number = DjezzyOffer.availablePhoneNumbers[index];
-                    final isSelected = _selectedNumber == number;
-                    final formattedNumber =
-                        DjezzyOffer.formatPhoneNumber(number);
+                    final phone = _phoneNumbers[index];
+                    final isSelected = _selectedNumber?.id == phone.id;
+                    final formattedNumber = phone.formattedNumber;
 
                     return ScaleTransition(
-                      scale: _cardAnimations[index],
+                      scale: index < _cardAnimations.length
+                          ? _cardAnimations[index]
+                          : const AlwaysStoppedAnimation(1.0),
                       child: GestureDetector(
-                        onTap: () => _selectNumber(number),
+                        onTap: () => _selectNumber(phone),
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
