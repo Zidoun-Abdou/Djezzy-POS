@@ -606,3 +606,77 @@ systemctl restart djezzy_pos
 6. **Contracts** - `/dashboard/contracts/` (list + detail view)
 
 ---
+
+## Bug Fix (2025-12-27)
+
+### 12. Fixed Type Mismatch Between OfferData and DjezzyOffer
+
+**Problem:**
+Flutter compilation error: `The argument type 'OfferData' can't be assigned to the parameter type 'DjezzyOffer'` at `offer_selection_page.dart:126`
+
+The app had two different offer types:
+- `OfferData` - Real data from API (used in `offer_selection_page.dart`)
+- `DjezzyOffer` - Hardcoded model (used in `number_selection_page.dart`)
+
+**Solution:**
+Updated all files to use `OfferData` and `PhoneNumberData` from the API service.
+
+#### Files Modified:
+
+**lib/models/contract_data.dart:**
+```dart
+// Changed:
+import 'djezzy_offer.dart';
+final DjezzyOffer selectedOffer;
+final String selectedPhoneNumber;
+
+// To:
+import '../services/api_service.dart';
+final OfferData selectedOffer;
+final PhoneNumberData selectedPhoneNumber;
+```
+- Updated `copyWith()` method parameter types
+- Updated `formattedPhoneNumber` getter to use `selectedPhoneNumber.formattedNumber`
+- Added `phoneNumberRaw` getter for raw number access
+
+**lib/contract/number_selection_page.dart:**
+```dart
+// Changed:
+import '../models/djezzy_offer.dart';
+final DjezzyOffer selectedOffer;
+String? _selectedNumber;
+
+// To:
+import '../services/api_service.dart';
+final OfferData selectedOffer;
+PhoneNumberData? _selectedNumber;
+List<PhoneNumberData> _phoneNumbers = [];
+```
+- Now uses phone numbers from `widget.selectedOffer.availablePhoneNumbers`
+- Added empty state when no phone numbers available
+- Updated selection logic to use `PhoneNumberData`
+
+**lib/services/pdf_generator_service.dart:**
+```dart
+// Removed:
+import '../models/djezzy_offer.dart';
+DjezzyOffer.formatPhoneNumber(contractData.selectedPhoneNumber);
+
+// Now uses:
+contractData.formattedPhoneNumber;
+```
+
+#### Type Compatibility:
+Both `OfferData` and `DjezzyOffer` have the same display properties:
+- `name`
+- `formattedPrice`
+- `formattedData`
+- `formattedValidity`
+- `features`
+
+#### Notes:
+- `DjezzyOffer` model still exists but is no longer used in the workflow
+- Phone numbers now come from API instead of hardcoded static list
+- All existing functionality preserved
+
+---
