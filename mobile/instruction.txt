@@ -1,0 +1,452 @@
+# Djezzy POS - Development Instructions
+
+## Changes Made (2025-12-18)
+
+### 1. Face Matching API Update
+- **File**: `lib/idcard/face_matching_page.dart`
+- **Old endpoint**: `https://api.icosnet.com/kyc_liveness/liveness`
+- **New endpoint**: `http://37.60.240.3:8000/api/v3/liveness`
+- Added field: `question: 'neutral'`
+- Removed Basic Auth header
+- Updated response parsing for new format:
+  - Decision is now a string: "True" or "False"
+  - Spoof detection uses `details.spoof_ratio > 0`
+  - Similarity percentage is NOT displayed to user
+
+### 2. App Rebranding (UniTrust -> Cortixia KYC)
+
+#### Android Files Modified:
+- `android/app/build.gradle.kts`: Changed namespace and applicationId to `com.cortixia.kyc`
+- `android/app/src/main/AndroidManifest.xml`: Changed app label to "Cortixia KYC"
+- `android/app/src/main/kotlin/com/cortixia/kyc/MainActivity.kt`: Changed package to `com.cortixia.kyc`
+- Renamed directory from `com/cortixia/unitrust/` to `com/cortixia/kyc/`
+
+#### iOS Files Modified:
+- `ios/Runner/Info.plist`:
+  - CFBundleDisplayName: "Cortixia KYC"
+  - CFBundleName: "cortixiakyc"
+  - Updated all permission descriptions
+  - Added App Transport Security exception for `37.60.240.3`
+- `ios/Runner.xcodeproj/project.pbxproj`: Changed PRODUCT_BUNDLE_IDENTIFIER to `com.cortixia.kyc`
+
+#### Dart Files Modified:
+- `lib/main.dart`: Renamed `UniTrustApp` to `CortixiaKYCApp`, updated title
+- `lib/auth/login_page.dart`: Updated app name display
+- `lib/home/home_page.dart`: Updated welcome message
+- `lib/idcard/read_nfc_page.dart`: Updated logger name
+
+#### Configuration Files Modified:
+- `pubspec.yaml`: Changed name to `cortixia_kyc`, updated description
+- `README.md`: Updated title
+
+## API Response Formats
+
+### Liveness API Success (Face Match):
+```json
+{
+    "decision": "True",
+    "mode": "neutral",
+    "details": {
+        "matches": 3,
+        "total_analyzed": 3,
+        "avg_similarity": 0.5303,
+        "spoof_ratio": 0.0,
+        "threshold": 0.25
+    },
+    "message": "Face matching completed"
+}
+```
+
+### Liveness API Failure (No Match):
+```json
+{
+    "decision": "False",
+    "mode": "neutral",
+    "details": {
+        "matches": 0,
+        "total_analyzed": 5,
+        "avg_similarity": 0.018,
+        "spoof_ratio": 0.0,
+        "threshold": 0.25
+    },
+    "message": "Insufficient matches or too many spoofed frames"
+}
+```
+
+### 3. Removed Email/OTP Authentication (2025-12-18)
+
+**Files Deleted:**
+- `lib/auth/login_page.dart`
+- `lib/auth/otp_verification_page.dart`
+- `lib/services/api_service.dart`
+
+**Files Modified:**
+- `lib/main.dart`: Removed login flow, app now launches directly to HomePage
+- `lib/home/home_page.dart`: Removed email parameter, logout button, and personalized greeting
+
+**Changes:**
+- App now opens directly to the home page without authentication
+- No email/OTP login required
+- Removed logout functionality
+- Header now shows "Cortixia KYC" branding instead of personalized greeting
+
+## Build Notes
+- After rebranding, run `flutter clean && flutter pub get` before building
+- The bundle identifier changed from `com.cortixia.unitrust` to `com.cortixia.kyc`
+- This will be treated as a new app on devices
+
+---
+
+## Changes Made (2025-12-26)
+
+### 4. App Rebranding (Cortixia KYC -> Djezzy POS)
+
+#### New Color Scheme (Based on Djezzy Logo):
+- **Primary (Djezzy Red)**: `#ED1C24`
+- **Primary Dark**: `#C41820`
+- **Secondary**: `#FF6B6B`
+- **Background**: `#0F0F1E` (dark navy - unchanged)
+- **Surface**: `#1A1A2E` (dark navy - unchanged)
+
+#### Configuration Files Modified:
+- `pubspec.yaml`: Changed name to `djezzy_pos`, updated description
+- `android/app/src/main/AndroidManifest.xml`: Changed app label to "Djezzy POS"
+- `ios/Runner/Info.plist`: Updated CFBundleDisplayName, CFBundleName, and all permission descriptions
+
+#### Dart Files Modified:
+- `lib/main.dart`: Renamed `CortixiaKYCApp` to `DjezzyPOSApp`, updated title and all color references
+- `lib/home/home_page.dart`: Updated app name, gradients, feature cards, and all accent colors
+- `lib/idcard/user_profile_page.dart`: Updated all gradient and accent colors
+- `lib/idcard/mrz_scanner_page.dart`: Updated border and corner indicator colors
+- `lib/idcard/read_nfc_page.dart`: Updated logger name, gradients, button colors, and icon colors
+- `lib/idcard/face_matching_page.dart`: Updated all gradient and accent colors
+- `lib/documents/document_list_page.dart`: Changed teal to Djezzy red
+- `lib/documents/document_scanner_page.dart`: Updated all gradient and accent colors
+
+#### Android Icons Updated:
+- Generated new icons from Djezzy logo for all Android density folders:
+  - `mipmap-mdpi/ic_launcher.png` (48x48)
+  - `mipmap-hdpi/ic_launcher.png` (72x72)
+  - `mipmap-xhdpi/ic_launcher.png` (96x96)
+  - `mipmap-xxhdpi/ic_launcher.png` (144x144)
+  - `mipmap-xxxhdpi/ic_launcher.png` (192x192)
+
+#### Color Replacement Summary:
+| Old Color | New Color | Purpose |
+|-----------|-----------|---------|
+| `#6C63FF` | `#ED1C24` | Primary accent (Djezzy Red) |
+| `#5856D6` | `#C41820` | Primary dark |
+| `#00D9FF` | `#FF6B6B` | Secondary accent |
+| `#00B8D4` | `#FF5252` | Secondary dark |
+
+#### Notes:
+- All existing functionality remains unchanged
+- Only visual branding has been updated
+- iOS icons not updated (Android only for now)
+- Tagline remains: "Votre identité numérique sécurisée"
+
+---
+
+## Changes Made (2025-12-26) - Feature Removal
+
+### 5. Removed Features - Keep Only ID Card Workflow
+
+**Goal:** Simplify app to only ID card info retrieval (MRZ scanning + NFC reading)
+
+#### Files DELETED (4 files):
+```
+lib/documents/document_list_page.dart
+lib/documents/document_scanner_page.dart
+lib/documents/document_viewer_page.dart
+lib/idcard/face_matching_page.dart
+```
+
+#### Files MODIFIED:
+
+**lib/home/home_page.dart:**
+- Removed import for document_list_page.dart
+- Reduced feature cards from 4 to 1 (ID Card only)
+- Removed passport, document scanner, wallet features
+- Removed _showComingSoonDialog() method
+- Simplified _navigateToFeature() to only handle ID Card
+
+**lib/idcard/read_nfc_page.dart:**
+- Removed import for face_matching_page.dart
+- Removed path_provider, path imports (no longer needed)
+- Removed _faceImagePath and _showFaceMatching variables
+- Removed _saveFaceImage() and _startFaceMatching() methods
+- After successful NFC decode, now navigates directly to UserProfilePage
+- Added IDCardService.markAsVerified() call after successful decode
+- Removed biometric verification button UI
+
+**pubspec.yaml - Dependencies REMOVED:**
+```yaml
+cunning_document_scanner: ^1.2.3
+share_plus: ^7.2.1
+path_provider: ^2.1.3
+path: ^1.8.3
+```
+
+#### New Simplified Workflow:
+```
+Home Page → ID Card Feature → MRZ Scanner → NFC Reader → User Profile
+```
+
+#### Files KEPT (unchanged):
+- lib/main.dart
+- lib/idcard/mrz_scanner_page.dart
+- lib/idcard/user_profile_page.dart
+- lib/services/id_card_service.dart
+- lib/utils/helpers.dart
+
+#### Build Notes:
+- Run `flutter clean && flutter pub get` after these changes
+- The app now only supports ID card scanning functionality
+
+---
+
+## Bug Fixes (2025-12-26) - Compilation Errors
+
+### 6. Fixed Compilation Errors in read_nfc_page.dart
+
+**Problem:**
+After removing face matching feature, two compilation errors occurred:
+1. `IDCardService.markAsVerified()` was called without required `confidence` parameter
+2. `UserProfilePage` was missing required `userData` parameter
+
+**Solution in `lib/idcard/read_nfc_page.dart`:**
+
+```dart
+// BEFORE (line 182):
+await IDCardService.markAsVerified();
+
+// AFTER:
+await IDCardService.markAsVerified(1.0);  // 1.0 confidence for NFC verification
+
+// BEFORE (line 193):
+builder: (_) => UserProfilePage(cameras: widget.cameras),
+
+// AFTER:
+final userData = await IDCardService.getUserData();
+if (mounted && userData != null) {
+  Navigator.of(context).pushReplacement(
+    MaterialPageRoute(
+      builder: (_) => UserProfilePage(
+        userData: userData,
+        cameras: widget.cameras,
+      ),
+    ),
+  );
+}
+```
+
+**Notes:**
+- Confidence is set to `1.0` since NFC chip data is considered fully verified
+- User data is fetched from IDCardService after saving NFC data
+- Navigation only occurs if userData is successfully retrieved
+
+---
+
+## Major Update (2025-12-26) - Complete POS Workflow Implementation
+
+### 7. New Sales Workflow for Djezzy SIM Card Sales
+
+**New App Flow:**
+```
+Offer Selection → Number Selection → Scan Intro → MRZ Scan → NFC Read → Signature → Contract Preview → Email Submission
+```
+
+#### New Files Created (Flutter - 10 files):
+
+**Models (`lib/models/`):**
+- `djezzy_offer.dart` - Djezzy offer model with 5 LEGEND offers
+- `contract_data.dart` - Contract data passed through workflow
+
+**Contract Pages (`lib/contract/`):**
+- `offer_selection_page.dart` - Grid of 5 LEGEND offers to select
+- `number_selection_page.dart` - List of 5 available phone numbers
+- `scan_intro_page.dart` - Animation before MRZ scanning
+- `signature_page.dart` - Signature pad + ID confirmation checkbox
+- `contract_preview_page.dart` - PDF viewer with share/print options
+- `email_submission_page.dart` - Email input UI for contract delivery
+
+**Services (`lib/services/`):**
+- `pdf_generator_service.dart` - Generates beautiful PDF contract
+
+**Assets:**
+- `assets/images/djezzy_logo.png` - Djezzy logo for PDF header
+
+#### Files Modified (Flutter):
+
+**lib/main.dart:**
+- Now starts with `OfferSelectionPage` instead of `HomePage`
+- Import changed from `home/home_page.dart` to `contract/offer_selection_page.dart`
+
+**lib/idcard/mrz_scanner_page.dart:**
+- Added optional `ContractData? contractData` parameter
+- Passes contractData to ReadNfcPage
+
+**lib/idcard/read_nfc_page.dart:**
+- Added optional `ContractData? contractData` parameter
+- Added import for `contract_data.dart` and `signature_page.dart`
+- After NFC read: if contractData exists → SignaturePage, else → UserProfilePage
+- Updates contractData with user data from NFC
+
+**pubspec.yaml - New Dependencies Added:**
+```yaml
+signature: ^5.4.1          # Manuscrit signature pad
+pdf: ^3.10.8               # PDF generation
+printing: ^5.12.0          # PDF preview/print
+path_provider: ^2.1.2      # File storage
+```
+
+**pubspec.yaml - Assets Added:**
+```yaml
+flutter:
+  assets:
+    - assets/images/
+```
+
+#### Djezzy Offers (Hardcoded):
+| Offer | Price | Data | Validity |
+|-------|-------|------|----------|
+| LEGEND 1500 | 1500 DA | 50 Go | 30 jours |
+| LEGEND 1000 | 1000 DA | 30 Go | 30 jours |
+| LEGEND 150 | 150 DA | 5 Go | 7 jours |
+| LEGEND 100 | 100 DA | 3 Go | 3 jours |
+| LEGEND 50 | 50 DA | 1 Go | 1 jour |
+
+#### Phone Numbers (Hardcoded):
+- 0770 12 34 56
+- 0771 23 45 67
+- 0772 34 56 78
+- 0773 45 67 89
+- 0774 56 78 90
+
+#### PDF Contract Layout:
+```
++--------------------------------------------------+
+|  [DJEZZY LOGO]              N°: DJ-YYYYMMDD-XXXX |
+|  CONTRAT D'ABONNEMENT       Date: DD/MM/YYYY     |
++--------------------------------------------------+
+|  INFORMATIONS CLIENT                             |
+|  Nom, Prenom, CNI, NIN, etc. from NFC            |
++--------------------------------------------------+
+|  OFFRE SELECTIONNEE                              |
+|  LEGEND XXXX - XXXX DA                           |
+|  Numero: 07XX XX XX XX                           |
+|  Features list                                   |
++--------------------------------------------------+
+|  CONDITIONS GENERALES                            |
+|  Terms text                                      |
++--------------------------------------------------+
+|  SIGNATURE DU CLIENT                             |
+|  [Manuscrit Signature]  Nom Prenom               |
+|  Confirmation checkbox text                      |
++--------------------------------------------------+
+```
+
+---
+
+### 8. Django Backend Created
+
+**Location:** `/djezzy pos backend/`
+
+#### Project Structure:
+```
+djezzy pos backend/
+├── manage.py
+├── requirements.txt
+├── .env.example
+├── .gitignore
+├── djezzy_pos/
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+└── apps/
+    ├── accounts/       # Custom User model + admin
+    ├── offers/         # Djezzy offers CRUD
+    ├── phone_numbers/  # Phone numbers CRUD
+    └── contracts/      # Contract storage
+```
+
+#### Models:
+
+**User (accounts):**
+- Custom User extending AbstractUser
+- Fields: role (admin/manager/agent), phone_number, store_location
+
+**Offer (offers):**
+- name, code, price, currency
+- data_allowance_mb, voice_minutes, sms_count
+- validity_days, features (JSON), is_active, is_featured
+
+**PhoneNumber (phone_numbers):**
+- number (regex: ^07[0-9]{8}$)
+- status: available | assigned | reserved | blocked
+- assigned_to_name, assigned_to_nin, assigned_date
+
+**Contract (contracts):**
+- contract_number (auto: DJ-YYYYMMDD-XXXX)
+- Customer info from NFC (names, dates, NIN, CNI, etc.)
+- offer FK, phone_number FK
+- pdf_file, customer_photo, signature_base64
+- customer_email, email_sent
+- status: draft | signed | validated | cancelled
+
+#### Admin Features:
+- Custom branding: "Djezzy POS Administration"
+- Bulk actions: activate/deactivate offers, block numbers, validate contracts
+- Status badges with colors
+- Search and filter on all models
+- Photo/signature preview in contract detail
+
+#### API Endpoints:
+- `POST /api/token/` - JWT authentication
+- `GET/POST /api/offers/` - Offers CRUD
+- `GET /api/offers/active/` - Active offers only
+- `GET/POST /api/phone-numbers/` - Phone numbers CRUD
+- `GET /api/phone-numbers/available/` - Available numbers
+- `POST /api/phone-numbers/{id}/assign/` - Assign to customer
+- `GET/POST /api/contracts/` - Contracts CRUD
+- `POST /api/contracts/{id}/sign/` - Mark as signed
+- `POST /api/contracts/{id}/send_email/` - Send email
+
+#### Setup Instructions:
+```bash
+cd "djezzy pos backend"
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+pip install -r requirements.txt
+cp .env.example .env
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py load_sample_data  # Load 5 offers + 5 numbers
+python manage.py runserver
+```
+
+Admin URL: http://localhost:8000/admin/
+
+---
+
+## Build Notes
+
+### Flutter App:
+```bash
+cd "Djezzy POS Mobile"
+flutter clean
+flutter pub get
+flutter run
+```
+
+### Django Backend:
+```bash
+cd "djezzy pos backend"
+python manage.py runserver
+```
+
+### Current Status:
+- Flutter app: Complete workflow implemented (UI only, email sending pending)
+- Django backend: Complete with admin interface (API ready for integration)
+- Data source: Currently hardcoded in Flutter, can switch to Django API later

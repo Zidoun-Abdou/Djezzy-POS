@@ -1,0 +1,54 @@
+name: djezzy_pos
+description: "Djezzy POS - Votre identité numérique sécurisée"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Core packages
+  cupertino_icons: ^1.0.8
+  http: ^1.2.2
+  intl: ^0.19.0
+  logging: ^1.2.0
+
+  # Storage
+  shared_preferences: ^2.2.2
+
+  # Camera and image processing
+  camera: ^0.10.5+5
+  google_mlkit_text_recognition: ^0.15.0
+
+  # NFC reading
+  dmrtd:
+    git:
+      url: https://github.com/Zidoun-Abdou/dr.az_decoder.git
+      ref: main
+
+  # Android intents
+  android_intent_plus: ^5.1.0
+
+  # Optional UI enhancements
+  flutter_spinkit: ^5.2.0
+
+  # Signature capture
+  signature: ^5.4.1
+
+  # PDF generation and printing
+  pdf: ^3.10.8
+  printing: ^5.12.0
+  path_provider: ^2.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
