@@ -450,3 +450,102 @@ python manage.py runserver
 - Flutter app: Complete workflow implemented (UI only, email sending pending)
 - Django backend: Complete with admin interface (API ready for integration)
 - Data source: Currently hardcoded in Flutter, can switch to Django API later
+
+---
+
+## Admin UI Enhancement (2025-12-26)
+
+### 9. Beautiful Admin Dashboard with Jazzmin Theme
+
+**Objective:** Update Django admin to match mobile app's modern design with Djezzy branding.
+
+#### Files Modified:
+
+**backend/requirements.txt:**
+- Added `django-jazzmin>=2.6.0` for modern Bootstrap-based admin theme
+
+**backend/djezzy_pos/settings.py:**
+- Added 'jazzmin' to INSTALLED_APPS (before django.contrib.admin)
+- Added JAZZMIN_SETTINGS configuration with Djezzy branding
+- Added JAZZMIN_UI_TWEAKS for red color scheme
+
+#### New File Created:
+
+**backend/static/admin/css/djezzy_admin.css:**
+- Custom CSS with Djezzy brand colors (#ED1C24, #C41820)
+- Gradient buttons and rounded corners matching mobile app
+- Red navbar, sidebar, and accent colors
+- Modern card styling with shadows
+
+#### Admin Features:
+- Site title: "Djezzy POS Admin"
+- Red gradient navbar and sidebar
+- Font Awesome icons for each model
+- Horizontal tabs on change forms
+- Custom scrollbar styling
+- Modern login page
+
+---
+
+### 10. Sample Data Management Commands
+
+#### Created 3 management commands for database population:
+
+**1. load_djezzy_offers command:**
+```bash
+python manage.py load_djezzy_offers
+```
+Loads 8 Djezzy LEGEND offers (from web research):
+| Offer | Price | Data | Validity |
+|-------|-------|------|----------|
+| LEGEND 2500 | 2500 DA | 100 GB | 30 days |
+| LEGEND 2000 | 2000 DA | 70 GB | 30 days |
+| LEGEND 1500 | 1500 DA | 50 GB | 30 days |
+| LEGEND 1000 | 1000 DA | 30 GB | 30 days |
+| LEGEND 500 | 500 DA | 10 GB | 30 days |
+| LEGEND 150 | 150 DA | 5 GB | 7 days |
+| LEGEND 100 | 100 DA | 3 GB | 3 days |
+| LEGEND 50 | 50 DA | 1 GB | 1 day |
+
+**2. generate_phone_numbers command:**
+```bash
+python manage.py generate_phone_numbers [--count 200] [--clear]
+```
+- Generates 200 phone numbers by default
+- Format: 07XX XXX XXX (Djezzy prefixes: 0770-0779)
+- Distributed across offers (mid-tier gets more)
+- All numbers set as 'available'
+
+**3. create_sample_agents command:**
+```bash
+python manage.py create_sample_agents [--password <pw>] [--clear]
+```
+Creates 5 sample users:
+| Username | Role | Location | Password |
+|----------|------|----------|----------|
+| agent1 | Agent | Alger Centre | Djezzy2024! |
+| agent2 | Agent | Oran | Djezzy2024! |
+| agent3 | Agent | Constantine | Djezzy2024! |
+| agent4 | Agent | Annaba | Djezzy2024! |
+| manager1 | Manager | Alger - Siege | Djezzy2024! |
+
+#### VPS Deployment:
+Commands run on VPS (194.163.133.249):
+```bash
+cd /var/www/Djezzy-POS
+git pull origin main
+cd backend
+source venv/bin/activate
+pip install django-jazzmin
+python manage.py collectstatic --noinput --settings=djezzy_pos.settings_prod
+python manage.py load_djezzy_offers --settings=djezzy_pos.settings_prod
+python manage.py generate_phone_numbers --settings=djezzy_pos.settings_prod
+python manage.py create_sample_agents --settings=djezzy_pos.settings_prod
+systemctl restart djezzy_pos
+```
+
+#### Admin URL:
+- Production: http://194.163.133.249/admin/
+- Test login: agent1 / Djezzy2024!
+
+---
