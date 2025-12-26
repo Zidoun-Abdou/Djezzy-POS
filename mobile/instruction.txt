@@ -549,3 +549,60 @@ systemctl restart djezzy_pos
 - Test login: agent1 / Djezzy2024!
 
 ---
+
+## Custom Dashboard (2025-12-27)
+
+### 11. New Custom Admin Dashboard (HTML + Tailwind + Alpine.js)
+
+**Objective:** Replace Django admin with a modern, custom dashboard built from scratch.
+
+**URL:** http://194.163.133.249/dashboard/
+**Login:** agent1 / Djezzy2024!
+
+#### Technology Stack:
+- Django templates
+- Tailwind CSS (CDN)
+- Alpine.js for interactivity
+- REST API integration
+
+#### New Files Created:
+
+**Django App:** `apps/dashboard/`
+- `views.py` - View functions with login_required decorator
+- `urls.py` - URL routing for all pages
+- `templates/dashboard/` - All HTML templates
+
+**Templates:**
+- `base.html` - Base layout with sidebar/header
+- `login.html` - Login page with Djezzy branding
+- `index.html` - Dashboard home with stats
+- `users.html` - Users CRUD with role filtering
+- `offers.html` - Offers with toggle switches
+- `phone_numbers.html` - Bulk status changes
+- `contracts.html` - Contracts list
+- `contract_detail.html` - Contract details
+
+**Static Files:** `static/dashboard/`
+- `css/custom.css` - Custom styles
+- `js/api.js` - JWT API helper
+- `js/app.js` - Main application
+
+#### Features:
+- Light theme with Djezzy red (#ED1C24) accents
+- Responsive sidebar navigation
+- Stats cards with live API data
+- CRUD modals for Users and Offers
+- Status filter tabs for Phone Numbers and Contracts
+- Bulk selection and actions
+- Toast notifications
+- Mobile-friendly design
+
+#### Pages:
+1. **Login** - `/dashboard/login/`
+2. **Dashboard** - `/dashboard/` (stats overview)
+3. **Users** - `/dashboard/users/` (full CRUD)
+4. **Offers** - `/dashboard/offers/` (with toggle switches)
+5. **Phone Numbers** - `/dashboard/phone-numbers/` (bulk actions)
+6. **Contracts** - `/dashboard/contracts/` (list + detail view)
+
+---
