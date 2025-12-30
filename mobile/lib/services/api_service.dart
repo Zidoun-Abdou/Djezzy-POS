@@ -60,15 +60,51 @@ class ApiService {
     }
   }
 
-  /// Convert date from MM/DD/YYYY to YYYY-MM-DD for Django API
+  /// Convert date to YYYY-MM-DD for Django API
+  /// Handles multiple input formats: MM/DD/YYYY, DD/MM/YYYY, YYYY-MM-DD, YYMMDD
   String _convertToIsoDate(String? date) {
     if (date == null || date.isEmpty) return '';
+
+    // Already in ISO format YYYY-MM-DD
+    if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(date)) {
+      return date;
+    }
+
+    // MRZ format YYMMDD (6 digits)
+    if (RegExp(r'^\d{6}$').hasMatch(date)) {
+      final yy = date.substring(0, 2);
+      final mm = date.substring(2, 4);
+      final dd = date.substring(4, 6);
+      final year = int.parse(yy) < 30 ? '20$yy' : '19$yy';
+      return '$year-$mm-$dd';
+    }
+
+    // Format with slashes: MM/DD/YYYY or DD/MM/YYYY
     final parts = date.split('/');
     if (parts.length == 3) {
-      // MM/DD/YYYY -> YYYY-MM-DD
+      // Check if first part is year (YYYY/MM/DD)
+      if (parts[0].length == 4) {
+        return '${parts[0]}-${parts[1].padLeft(2, '0')}-${parts[2].padLeft(2, '0')}';
+      }
+      // Assume MM/DD/YYYY format
       return '${parts[2]}-${parts[0].padLeft(2, '0')}-${parts[1].padLeft(2, '0')}';
     }
-    return date; // Return as-is if already in correct format
+
+    // Format with dashes but wrong order
+    final dashParts = date.split('-');
+    if (dashParts.length == 3) {
+      // Check if first part is year
+      if (dashParts[0].length == 4) {
+        return date; // Already correct
+      }
+      // Try to parse and reorder: assume DD-MM-YYYY or MM-YYYY-DD
+      // If middle part is 4 digits, it's MM-YYYY-DD -> YYYY-MM-DD
+      if (dashParts[1].length == 4) {
+        return '${dashParts[1]}-${dashParts[0].padLeft(2, '0')}-${dashParts[2].padLeft(2, '0')}';
+      }
+    }
+
+    return date; // Return as-is if can't parse
   }
 
   /// Create a new contract with full customer data

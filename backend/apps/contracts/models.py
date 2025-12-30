@@ -71,6 +71,7 @@ class Contract(models.Model):
     )
     customer_id_number = models.CharField(
         max_length=50,
+        blank=True,
         verbose_name='Numero CNI'
     )
     customer_id_expiry = models.DateField(
