@@ -60,29 +60,48 @@ class ApiService {
     }
   }
 
-  /// Create a new contract
-  Future<ContractResult> createContract({
+  /// Create a new contract with full customer data
+  Future<ContractResult> submitContract({
     required int offerId,
     required int phoneNumberId,
-    required String customerName,
-    required String customerNin,
-    String? notes,
+    required Map<String, dynamic> customerData,
+    String? signatureBase64,
+    String? photoBase64,
   }) async {
     try {
+      final personal = customerData['personal'] as Map<String, dynamic>? ?? {};
+      final document = customerData['document'] as Map<String, dynamic>? ?? {};
+
+      final body = {
+        'offer': offerId,
+        'phone_number': phoneNumberId,
+        'customer_first_name': personal['firstName'] ?? '',
+        'customer_last_name': personal['lastName'] ?? '',
+        'customer_first_name_ar': personal['firstNameAr'] ?? '',
+        'customer_last_name_ar': personal['lastNameAr'] ?? '',
+        'customer_birth_date': personal['birthDate'] ?? '',
+        'customer_birth_place': personal['birthPlace'] ?? '',
+        'customer_sex': personal['sex'] ?? '',
+        'customer_nin': personal['nin'] ?? '',
+        'customer_id_number': document['idNumber'] ?? '',
+        'customer_id_expiry': document['expiryDate'] ?? '',
+        'customer_daira': document['daira'] ?? '',
+        'customer_baladia': document['baladia'] ?? '',
+        if (signatureBase64 != null) 'signature_base64': signatureBase64,
+        if (photoBase64 != null) 'customer_photo': photoBase64,
+      };
+
       final response = await _authService.authenticatedPost(
         ApiConfig.contractsEndpoint,
-        {
-          'offer': offerId,
-          'phone_number': phoneNumberId,
-          'customer_name': customerName,
-          'customer_nin': customerNin,
-          if (notes != null) 'notes': notes,
-        },
+        body,
       );
 
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        return ContractResult.success(data['id']);
+        return ContractResult.success(
+          data['id'],
+          contractNumber: data['contract_number'],
+        );
       } else {
         final error = jsonDecode(response.body);
         return ContractResult.error(
@@ -91,6 +110,43 @@ class ApiService {
       }
     } catch (e) {
       return ContractResult.error('Impossible de creer le contrat: $e');
+    }
+  }
+
+  /// Fetch agent's contracts (my sales)
+  Future<List<ContractListItem>> fetchMyContracts() async {
+    try {
+      final response = await _authService.authenticatedGet(
+        '${ApiConfig.contractsEndpoint}my-contracts/',
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final results = data is List ? data : (data['results'] ?? []);
+        return (results as List)
+            .map((json) => ContractListItem.fromJson(json))
+            .toList();
+      }
+      throw Exception('Failed to load contracts: ${response.statusCode}');
+    } catch (e) {
+      throw Exception('Failed to fetch contracts: $e');
+    }
+  }
+
+  /// Fetch agent's statistics
+  Future<MyStats> fetchMyStats() async {
+    try {
+      final response = await _authService.authenticatedGet(
+        '${ApiConfig.contractsEndpoint}my-stats/',
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return MyStats.fromJson(data);
+      }
+      throw Exception('Failed to load stats: ${response.statusCode}');
+    } catch (e) {
+      throw Exception('Failed to fetch stats: $e');
     }
   }
 }
@@ -204,8 +260,82 @@ class PhoneNumberData {
 class ContractResult {
   final bool success;
   final int? contractId;
+  final String? contractNumber;
   final String? error;
 
-  ContractResult.success(this.contractId) : success = true, error = null;
-  ContractResult.error(this.error) : success = false, contractId = null;
+  ContractResult.success(this.contractId, {this.contractNumber})
+      : success = true,
+        error = null;
+  ContractResult.error(this.error)
+      : success = false,
+        contractId = null,
+        contractNumber = null;
+}
+
+/// Contract list item for my sales
+class ContractListItem {
+  final int id;
+  final String contractNumber;
+  final String status;
+  final String statusDisplay;
+  final String customerFirstName;
+  final String customerLastName;
+  final String phoneNumber;
+  final String offerName;
+  final String createdAt;
+
+  ContractListItem({
+    required this.id,
+    required this.contractNumber,
+    required this.status,
+    required this.statusDisplay,
+    required this.customerFirstName,
+    required this.customerLastName,
+    required this.phoneNumber,
+    required this.offerName,
+    required this.createdAt,
+  });
+
+  String get customerFullName => '$customerFirstName $customerLastName'.trim();
+
+  factory ContractListItem.fromJson(Map<String, dynamic> json) {
+    final phoneDetail = json['phone_number_detail'] as Map<String, dynamic>?;
+    final offerDetail = json['offer_detail'] as Map<String, dynamic>?;
+
+    return ContractListItem(
+      id: json['id'],
+      contractNumber: json['contract_number'] ?? '',
+      status: json['status'] ?? 'draft',
+      statusDisplay: json['status_display'] ?? 'Brouillon',
+      customerFirstName: json['customer_first_name'] ?? '',
+      customerLastName: json['customer_last_name'] ?? '',
+      phoneNumber: phoneDetail?['formatted_number'] ?? phoneDetail?['number'] ?? '',
+      offerName: offerDetail?['name'] ?? '',
+      createdAt: json['created_at'] ?? '',
+    );
+  }
+}
+
+/// Agent statistics
+class MyStats {
+  final int total;
+  final int today;
+  final int thisMonth;
+  final Map<String, int> byStatus;
+
+  MyStats({
+    required this.total,
+    required this.today,
+    required this.thisMonth,
+    required this.byStatus,
+  });
+
+  factory MyStats.fromJson(Map<String, dynamic> json) {
+    return MyStats(
+      total: json['total'] ?? 0,
+      today: json['today'] ?? 0,
+      thisMonth: json['this_month'] ?? 0,
+      byStatus: Map<String, int>.from(json['by_status'] ?? {}),
+    );
+  }
 }

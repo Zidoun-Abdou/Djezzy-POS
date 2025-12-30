@@ -70,3 +70,9 @@ def contract_detail_view(request, pk):
     """Contract detail page."""
     contract = get_object_or_404(Contract, pk=pk)
     return render(request, 'dashboard/contract_detail.html', {'contract': contract})
+
+
+@login_required(login_url='/dashboard/login/')
+def my_sales_view(request):
+    """Agent's sales history page."""
+    return render(request, 'dashboard/my_sales.html')

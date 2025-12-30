@@ -11,6 +11,7 @@ class ContractSerializer(serializers.ModelSerializer):
     phone_number_detail = PhoneNumberSerializer(source='phone_number', read_only=True)
     customer_full_name = serializers.ReadOnlyField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    agent_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Contract
@@ -29,12 +30,19 @@ class ContractSerializer(serializers.ModelSerializer):
             # Contact
             'customer_email', 'email_sent', 'email_sent_at',
             # Metadata
-            'created_by', 'created_at', 'updated_at', 'signed_at'
+            'created_by', 'agent_name', 'created_at', 'updated_at', 'signed_at'
         ]
         read_only_fields = [
             'contract_number', 'created_at', 'updated_at',
             'signed_at', 'email_sent_at'
         ]
+
+    def get_agent_name(self, obj):
+        """Get the name of the agent who created this contract."""
+        if obj.created_by:
+            full_name = f"{obj.created_by.first_name} {obj.created_by.last_name}".strip()
+            return full_name if full_name else obj.created_by.username
+        return None
 
 
 class ContractCreateSerializer(serializers.ModelSerializer):
@@ -53,6 +61,11 @@ class ContractCreateSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
+        # Set created_by from authenticated user
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            validated_data['created_by'] = request.user
+
         # Assign phone number to customer
         phone_number = validated_data.get('phone_number')
         if phone_number and phone_number.status == 'available':

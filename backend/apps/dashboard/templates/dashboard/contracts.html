@@ -59,6 +59,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Offre</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Numero</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Agent</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
@@ -69,7 +70,7 @@
                     <!-- Loading -->
                     <template x-if="loading">
                         <tr>
-                            <td colspan="8" class="px-6 py-12 text-center">
+                            <td colspan="9" class="px-6 py-12 text-center">
                                 <div class="flex items-center justify-center">
                                     <div class="spinner"></div>
                                     <span class="ml-3 text-gray-500">Chargement...</span>
@@ -81,7 +82,7 @@
                     <!-- Empty -->
                     <template x-if="!loading && filteredContracts.length === 0">
                         <tr>
-                            <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                            <td colspan="9" class="px-6 py-12 text-center text-gray-500">
                                 Aucun contrat trouve
                             </td>
                         </tr>
@@ -102,6 +103,9 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="text-sm font-mono text-gray-600" x-text="contract.phone_number_detail?.formatted_number || '-'"></span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-gray-600" x-text="contract.agent_name || '-'"></span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span :class="{

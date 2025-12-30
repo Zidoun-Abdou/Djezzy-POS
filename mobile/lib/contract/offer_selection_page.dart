@@ -3,6 +3,7 @@ import 'package:camera/camera.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../auth/login_page.dart';
+import '../sales/my_sales_page.dart';
 import 'number_selection_page.dart';
 
 class OfferSelectionPage extends StatefulWidget {
@@ -129,6 +130,15 @@ class _OfferSelectionPageState extends State<OfferSelectionPage>
     );
   }
 
+  void _navigateToMySales() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const MySalesPage(),
+      ),
+    );
+  }
+
   Future<void> _logout() async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -207,6 +217,12 @@ class _OfferSelectionPageState extends State<OfferSelectionPage>
                               ),
                             ],
                           ),
+                        ),
+                        IconButton(
+                          onPressed: _navigateToMySales,
+                          icon: const Icon(Icons.receipt_long),
+                          color: const Color(0xFFED1C24),
+                          tooltip: 'Mes Ventes',
                         ),
                         IconButton(
                           onPressed: _logout,

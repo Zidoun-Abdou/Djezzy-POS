@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
@@ -5,6 +6,7 @@ import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import '../models/contract_data.dart';
 import '../services/pdf_generator_service.dart';
+import '../services/api_service.dart';
 import 'offer_selection_page.dart';
 
 class ContractPreviewPage extends StatefulWidget {
@@ -26,9 +28,14 @@ class _ContractPreviewPageState extends State<ContractPreviewPage>
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
+  final ApiService _apiService = ApiService();
+
   Uint8List? _pdfBytes;
   bool _isGenerating = true;
   String? _error;
+  bool _isSubmitting = false;
+  bool _isSubmitted = false;
+  String? _serverContractNumber;
 
   @override
   void initState() {
@@ -62,6 +69,9 @@ class _ContractPreviewPageState extends State<ContractPreviewPage>
           _isGenerating = false;
         });
         _fadeController.forward();
+
+        // Submit contract to backend after PDF is ready
+        _submitContractToServer();
       }
     } catch (e) {
       if (mounted) {
@@ -69,6 +79,69 @@ class _ContractPreviewPageState extends State<ContractPreviewPage>
           _error = e.toString();
           _isGenerating = false;
         });
+      }
+    }
+  }
+
+  Future<void> _submitContractToServer() async {
+    if (_isSubmitting || _isSubmitted) return;
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      // Get signature as base64
+      String? signatureBase64;
+      if (widget.contractData.signatureImage != null) {
+        signatureBase64 = base64Encode(widget.contractData.signatureImage!);
+      }
+
+      // Get face image (already base64 from NFC)
+      final photoBase64 = widget.contractData.faceImageBase64;
+
+      final result = await _apiService.submitContract(
+        offerId: widget.contractData.selectedOffer.id,
+        phoneNumberId: widget.contractData.selectedPhoneNumber.id,
+        customerData: widget.contractData.userData ?? {},
+        signatureBase64: signatureBase64,
+        photoBase64: photoBase64,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+          _isSubmitted = result.success;
+          _serverContractNumber = result.contractNumber;
+        });
+
+        if (!result.success) {
+          // Show error snackbar but don't block the flow
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.error ?? 'Erreur de synchronisation'),
+              backgroundColor: Colors.orange,
+              action: SnackBarAction(
+                label: 'Réessayer',
+                textColor: Colors.white,
+                onPressed: _submitContractToServer,
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+        // Show error snackbar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: Colors.orange,
+          ),
+        );
       }
     }
   }
@@ -320,22 +393,44 @@ class _ContractPreviewPageState extends State<ContractPreviewPage>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
+                    color: _isSubmitting
+                        ? Colors.orange.withOpacity(0.2)
+                        : _isSubmitted
+                            ? Colors.green.withOpacity(0.2)
+                            : Colors.grey.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.check_circle,
-                        color: Colors.green,
-                        size: 16,
-                      ),
-                      SizedBox(width: 4),
+                      if (_isSubmitting)
+                        const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                          ),
+                        )
+                      else
+                        Icon(
+                          _isSubmitted ? Icons.cloud_done : Icons.cloud_upload,
+                          color: _isSubmitted ? Colors.green : Colors.grey,
+                          size: 16,
+                        ),
+                      const SizedBox(width: 4),
                       Text(
-                        'Prêt',
+                        _isSubmitting
+                            ? 'Sync...'
+                            : _isSubmitted
+                                ? 'Synchro'
+                                : 'En attente',
                         style: TextStyle(
-                          color: Colors.green,
+                          color: _isSubmitting
+                              ? Colors.orange
+                              : _isSubmitted
+                                  ? Colors.green
+                                  : Colors.grey,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),

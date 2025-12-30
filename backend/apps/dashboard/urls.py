@@ -12,4 +12,5 @@ urlpatterns = [
     path('phone-numbers/', views.phone_numbers_view, name='phone_numbers'),
     path('contracts/', views.contracts_view, name='contracts'),
     path('contracts/<int:pk>/', views.contract_detail_view, name='contract_detail'),
+    path('my-sales/', views.my_sales_view, name='my_sales'),
 ]

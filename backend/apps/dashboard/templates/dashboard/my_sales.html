@@ -1,0 +1,204 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Mes Ventes - Djezzy POS{% endblock %}
+
+{% block page_title %}Mes Ventes{% endblock %}
+
+{% block content %}
+<div x-data="mySalesManager()" x-init="fetchData()">
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Total -->
+        <div class="bg-gradient-to-r from-djezzy to-djezzy-dark rounded-xl p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-white/80 text-sm">Total des ventes</p>
+                    <p class="text-3xl font-bold mt-1" x-text="stats.total">0</p>
+                </div>
+                <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Aujourd'hui</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-1" x-text="stats.today">0</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- This Month -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Ce mois</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-1" x-text="stats.this_month">0</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input type="text"
+                   x-model="searchQuery"
+                   @input="filterContracts()"
+                   placeholder="Rechercher..."
+                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy w-full sm:w-64">
+        </div>
+        <p class="text-sm text-gray-500">
+            <span x-text="filteredContracts.length"></span> contrats
+        </p>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">N° Contrat</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Offre</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Numero</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <!-- Loading -->
+                    <template x-if="loading">
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center">
+                                <div class="flex items-center justify-center">
+                                    <div class="spinner"></div>
+                                    <span class="ml-3 text-gray-500">Chargement...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+
+                    <!-- Empty -->
+                    <template x-if="!loading && filteredContracts.length === 0">
+                        <tr>
+                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                                <svg class="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Aucune vente trouvee
+                            </td>
+                        </tr>
+                    </template>
+
+                    <!-- Rows -->
+                    <template x-for="contract in filteredContracts" :key="contract.id">
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm font-medium text-djezzy" x-text="contract.contract_number"></span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900" x-text="contract.customer_first_name + ' ' + contract.customer_last_name"></div>
+                                <div class="text-xs text-gray-500" x-text="'NIN: ' + contract.customer_nin"></div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-gray-600" x-text="contract.offer_detail?.name || '-'"></span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm font-mono text-gray-600" x-text="contract.phone_number_detail?.formatted_number || '-'"></span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span :class="{
+                                    'bg-gray-100 text-gray-800': contract.status === 'draft',
+                                    'bg-yellow-100 text-yellow-800': contract.status === 'signed',
+                                    'bg-green-100 text-green-800': contract.status === 'validated',
+                                    'bg-red-100 text-red-800': contract.status === 'cancelled'
+                                }" class="px-2 py-1 text-xs font-medium rounded-full" x-text="getStatusLabel(contract.status)"></span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatDate(contract.created_at)"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <a :href="'/dashboard/contracts/' + contract.id + '/'" class="p-2 text-gray-600 hover:text-djezzy rounded-lg hover:bg-gray-100 inline-block">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                </a>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function mySalesManager() {
+    return {
+        contracts: [],
+        filteredContracts: [],
+        stats: { total: 0, today: 0, this_month: 0 },
+        loading: true,
+        searchQuery: '',
+
+        async fetchData() {
+            this.loading = true;
+            try {
+                const [contractsData, statsData] = await Promise.all([
+                    api.get('/contracts/my-contracts/'),
+                    api.get('/contracts/my-stats/')
+                ]);
+                this.contracts = contractsData.results || contractsData;
+                this.stats = statsData;
+                this.filterContracts();
+            } catch (error) {
+                showToast('Erreur lors du chargement', 'error');
+            }
+            this.loading = false;
+        },
+
+        filterContracts() {
+            this.filteredContracts = this.contracts.filter(contract => {
+                const matchesSearch = !this.searchQuery ||
+                    contract.contract_number.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                    (contract.customer_first_name + ' ' + contract.customer_last_name).toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                    contract.customer_nin.includes(this.searchQuery);
+                return matchesSearch;
+            });
+        },
+
+        getStatusLabel(status) {
+            const labels = {
+                'draft': 'Brouillon',
+                'signed': 'Signe',
+                'validated': 'Valide',
+                'cancelled': 'Annule'
+            };
+            return labels[status] || status;
+        }
+    };
+}
+</script>
+{% endblock %}

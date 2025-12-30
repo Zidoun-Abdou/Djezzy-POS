@@ -865,3 +865,66 @@ Offer Selection → Number Selection → Scan Intro → MRZ Scan → NFC Read �
 ```
 
 ---
+
+## Phone Number Assignment & Agent Traceability (2025-12-30)
+
+### 16. Auto Phone Number Assignment on Contract Creation
+
+**Problem:** Phone numbers weren't being marked as "assigned" when contracts were created, and agents couldn't track their sales.
+
+**Solution:**
+
+**Backend Changes:**
+
+1. **`backend/apps/contracts/serializers.py`**
+   - `ContractCreateSerializer.create()` now sets `created_by = request.user`
+   - Added `agent_name` field to `ContractSerializer` to display agent's name
+
+2. **`backend/apps/contracts/views.py`**
+   - Added `my_contracts` endpoint: `GET /api/contracts/my-contracts/`
+   - Added `my_stats` endpoint: `GET /api/contracts/my-stats/`
+
+**Mobile App Changes:**
+
+1. **`lib/services/api_service.dart`**
+   - Added `submitContract()` method with full customer data
+   - Added `fetchMyContracts()` method
+   - Added `fetchMyStats()` method
+   - Added `ContractListItem` and `MyStats` models
+
+2. **`lib/contract/contract_preview_page.dart`**
+   - After PDF generation, automatically calls `submitContract()` to backend
+   - Shows sync status badge (Sync.../Synchro/En attente)
+   - Phone number gets assigned on backend
+
+3. **`lib/sales/my_sales_page.dart`** (NEW)
+   - Agent can view their sales history
+   - Shows stats: Total, Today, This Month
+   - List of contracts with customer, phone, offer, status
+
+4. **`lib/contract/offer_selection_page.dart`**
+   - Added "Mes Ventes" icon button in header
+
+**Dashboard Changes:**
+
+1. **`apps/dashboard/templates/dashboard/contracts.html`**
+   - Added "Agent" column to contracts table
+
+2. **`apps/dashboard/templates/dashboard/my_sales.html`** (NEW)
+   - Agent's sales page with stats and contracts list
+
+3. **`apps/dashboard/templates/dashboard/components/sidebar.html`**
+   - Added "Mes Ventes" menu item
+
+**Data Flow:**
+```
+Agent logs in → Creates contract → API call with token →
+Backend assigns phone (available → assigned) + sets created_by →
+Phone disappears from available list → Agent sees in "Mes Ventes"
+```
+
+**New API Endpoints:**
+- `GET /api/contracts/my-contracts/` - Agent's contracts
+- `GET /api/contracts/my-stats/` - Agent's statistics (total, today, this_month)
+
+---

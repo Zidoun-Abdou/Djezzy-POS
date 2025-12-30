@@ -61,3 +61,35 @@ class ContractViewSet(viewsets.ModelViewSet):
             'by_status': {item['status']: item['count'] for item in by_status},
             'by_offer': {item['offer__name']: item['count'] for item in by_offer},
         })
+
+    @action(detail=False, methods=['get'], url_path='my-contracts')
+    def my_contracts(self, request):
+        """Get contracts created by the authenticated user."""
+        contracts = Contract.objects.filter(
+            created_by=request.user
+        ).order_by('-created_at')
+        serializer = self.get_serializer(contracts, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='my-stats')
+    def my_stats(self, request):
+        """Get statistics for the authenticated user's contracts."""
+        from django.db.models import Count
+        from django.utils import timezone
+        from datetime import timedelta
+
+        user_contracts = Contract.objects.filter(created_by=request.user)
+        today = timezone.now().date()
+        this_month = today.replace(day=1)
+
+        total = user_contracts.count()
+        today_count = user_contracts.filter(created_at__date=today).count()
+        this_month_count = user_contracts.filter(created_at__date__gte=this_month).count()
+        by_status = user_contracts.values('status').annotate(count=Count('id'))
+
+        return Response({
+            'total': total,
+            'today': today_count,
+            'this_month': this_month_count,
+            'by_status': {item['status']: item['count'] for item in by_status},
+        })
