@@ -77,28 +77,20 @@ class _LoginPageState extends State<LoginPage> {
                 // Logo
                 Center(
                   child: Container(
-                    width: 120,
-                    height: 120,
+                    width: 140,
+                    height: 140,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFED1C24),
-                      borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFED1C24).withOpacity(0.3),
+                          color: const Color(0xFFED1C24).withOpacity(0.2),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
                       ],
                     ),
-                    child: const Center(
-                      child: Text(
-                        'D',
-                        style: TextStyle(
-                          fontSize: 60,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                    child: Image.asset(
+                      'assets/images/djezzy_logo.png',
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
