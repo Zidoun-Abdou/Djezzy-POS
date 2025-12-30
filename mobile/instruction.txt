@@ -680,3 +680,109 @@ Both `OfferData` and `DjezzyOffer` have the same display properties:
 - All existing functionality preserved
 
 ---
+
+## PDF Contract Generation Fixes (2025-12-30)
+
+### 13. Fixed PDF Generation Issues
+
+**Problems Identified:**
+1. Arabic characters showing as "XXXXX" boxes
+2. Offer section empty (no name, price, phone, data, validity)
+3. Signature image not rendering
+4. Customer face photo missing from PDF
+
+**Root Causes:**
+- Default PDF font (Helvetica) doesn't support Arabic Unicode
+- Offer section content was being cut off
+- Face image was never included in PDF layout
+
+**Solutions Implemented:**
+
+#### 1. Arabic Font Support
+- Downloaded Amiri Arabic font TTF
+- Added to `assets/fonts/Amiri-Regular.ttf`
+- Updated `pubspec.yaml` to include fonts asset path
+- Load font in PDF generator and use for Arabic text fields with RTL direction
+
+#### 2. Face Photo Added
+- Extract face image from `contractData.faceImageBase64`
+- Decode base64 to bytes and create `pw.MemoryImage`
+- Display alongside client info in a bordered container
+- Show placeholder if no photo available
+
+#### 3. Offer Section Fixed
+- Added fallback values for all offer properties
+- Added debug logging to verify data flow
+- Used `pw.MultiPage` instead of `pw.Page` to handle overflow
+
+#### 4. Signature Rendering Fixed
+- Added proper container with padding
+- Verified signature bytes are passed through workflow
+
+**Files Modified:**
+
+| File | Changes |
+|------|---------|
+| `mobile/assets/fonts/Amiri-Regular.ttf` | NEW - Arabic font file |
+| `mobile/pubspec.yaml` | Added `- assets/fonts/` to assets |
+| `mobile/lib/services/pdf_generator_service.dart` | Complete rewrite with all fixes |
+
+**Key Code Changes:**
+
+```dart
+// Load Arabic font
+final arabicFontData = await rootBundle.load('assets/fonts/Amiri-Regular.ttf');
+final arabicFont = pw.Font.ttf(arabicFontData);
+
+// Use for Arabic text with RTL
+pw.Text(
+  arabicText,
+  style: pw.TextStyle(font: arabicFont),
+  textDirection: pw.TextDirection.rtl,
+)
+
+// Load face image from base64
+if (contractData.faceImageBase64 != null) {
+  final faceBytes = base64Decode(contractData.faceImageBase64!);
+  faceImage = pw.MemoryImage(faceBytes);
+}
+
+// Use MultiPage for overflow handling
+pdf.addPage(
+  pw.MultiPage(
+    pageFormat: PdfPageFormat.a4,
+    build: (context) => [...widgets...],
+  ),
+);
+```
+
+**PDF Layout:**
+```
++--------------------------------------------------+
+|  [DJEZZY LOGO]              N°: DJ-YYYYMMDD-XXXX |
+|  CONTRAT D'ABONNEMENT       Date: DD/MM/YYYY     |
++--------------------------------------------------+
+|  INFORMATIONS CLIENT                             |
+|  +--------+  Nom: XXXXX                          |
+|  | PHOTO  |  Prenom: XXXXX                       |
+|  |        |  Nom (Arabe): عربي (RTL)             |
+|  +--------+  ...more fields...                   |
++--------------------------------------------------+
+|  OFFRE SELECTIONNEE                              |
+|  LEGEND XXXX                        XXXX DZD     |
+|  Numero attribue: 07XX XX XX XX                  |
+|  Internet: XX Go                                 |
+|  Validite: XX jours                              |
+|  Avantages: ...                                  |
++--------------------------------------------------+
+|  CONDITIONS GENERALES                            |
+|  Terms text...                                   |
++--------------------------------------------------+
+|  SIGNATURE DU CLIENT                             |
+|  +------------+  Nom Prenom                      |
+|  | [Signature]|  Date: DD/MM/YYYY                |
+|  +------------+  ✓ Confirmation                  |
++--------------------------------------------------+
+```
+
+---
