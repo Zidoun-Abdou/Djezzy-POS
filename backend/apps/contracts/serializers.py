@@ -1,4 +1,6 @@
+import base64
 from rest_framework import serializers
+from django.core.files.base import ContentFile
 from .models import Contract
 from apps.offers.serializers import OfferSerializer
 from apps.phone_numbers.serializers import PhoneNumberSerializer
@@ -48,6 +50,11 @@ class ContractSerializer(serializers.ModelSerializer):
 class ContractCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating contracts."""
 
+    # Accept base64 photo data from mobile app
+    customer_photo_base64 = serializers.CharField(
+        write_only=True, required=False, allow_blank=True, allow_null=True
+    )
+
     class Meta:
         model = Contract
         fields = [
@@ -57,10 +64,23 @@ class ContractCreateSerializer(serializers.ModelSerializer):
             'customer_sex', 'customer_nin', 'customer_id_number',
             'customer_id_expiry', 'customer_daira', 'customer_baladia',
             'offer', 'phone_number', 'customer_email',
-            'signature_base64', 'customer_photo', 'pdf_file'
+            'signature_base64', 'customer_photo_base64', 'pdf_file'
         ]
 
     def create(self, validated_data):
+        # Handle base64 photo - convert to file
+        photo_base64 = validated_data.pop('customer_photo_base64', None)
+        if photo_base64:
+            try:
+                image_data = base64.b64decode(photo_base64)
+                nin = validated_data.get('customer_nin', 'unknown')
+                validated_data['customer_photo'] = ContentFile(
+                    image_data,
+                    name=f"photo_{nin}.jpg"
+                )
+            except Exception:
+                pass  # Ignore invalid base64
+
         # Set created_by from authenticated user
         request = self.context.get('request')
         if request and request.user.is_authenticated:

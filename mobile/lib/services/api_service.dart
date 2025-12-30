@@ -88,7 +88,7 @@ class ApiService {
         'customer_daira': document['daira'] ?? '',
         'customer_baladia': document['baladia'] ?? '',
         if (signatureBase64 != null) 'signature_base64': signatureBase64,
-        if (photoBase64 != null) 'customer_photo': photoBase64,
+        if (photoBase64 != null) 'customer_photo_base64': photoBase64,
       };
 
       final response = await _authService.authenticatedPost(
