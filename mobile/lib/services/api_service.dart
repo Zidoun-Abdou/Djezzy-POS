@@ -60,6 +60,17 @@ class ApiService {
     }
   }
 
+  /// Convert date from MM/DD/YYYY to YYYY-MM-DD for Django API
+  String _convertToIsoDate(String? date) {
+    if (date == null || date.isEmpty) return '';
+    final parts = date.split('/');
+    if (parts.length == 3) {
+      // MM/DD/YYYY -> YYYY-MM-DD
+      return '${parts[2]}-${parts[0].padLeft(2, '0')}-${parts[1].padLeft(2, '0')}';
+    }
+    return date; // Return as-is if already in correct format
+  }
+
   /// Create a new contract with full customer data
   Future<ContractResult> submitContract({
     required int offerId,
@@ -79,17 +90,19 @@ class ApiService {
         'customer_last_name': personal['lastName'] ?? '',
         'customer_first_name_ar': personal['firstNameAr'] ?? '',
         'customer_last_name_ar': personal['lastNameAr'] ?? '',
-        'customer_birth_date': personal['birthDate'] ?? '',
+        'customer_birth_date': _convertToIsoDate(personal['birthDate']),
         'customer_birth_place': personal['birthPlace'] ?? '',
         'customer_sex': personal['sex'] ?? '',
         'customer_nin': personal['nin'] ?? '',
         'customer_id_number': document['idNumber'] ?? '',
-        'customer_id_expiry': document['expiryDate'] ?? '',
+        'customer_id_expiry': _convertToIsoDate(document['expiryDate']),
         'customer_daira': document['daira'] ?? '',
         'customer_baladia': document['baladia'] ?? '',
         if (signatureBase64 != null) 'signature_base64': signatureBase64,
         if (photoBase64 != null) 'customer_photo_base64': photoBase64,
       };
+
+      print('Contract API Request: $body');
 
       final response = await _authService.authenticatedPost(
         ApiConfig.contractsEndpoint,
@@ -103,10 +116,23 @@ class ApiService {
           contractNumber: data['contract_number'],
         );
       } else {
+        print('Contract API Error: ${response.statusCode} - ${response.body}');
         final error = jsonDecode(response.body);
-        return ContractResult.error(
-          error['detail'] ?? 'Erreur lors de la creation du contrat',
-        );
+        // DRF returns field errors as {field_name: [errors]} or detail for non-field errors
+        String errorMsg = 'Erreur lors de la creation du contrat';
+        if (error is Map) {
+          if (error.containsKey('detail')) {
+            errorMsg = error['detail'].toString();
+          } else {
+            // Get first field error
+            final firstError = error.entries.first;
+            final fieldErrors = firstError.value;
+            if (fieldErrors is List && fieldErrors.isNotEmpty) {
+              errorMsg = '${firstError.key}: ${fieldErrors.first}';
+            }
+          }
+        }
+        return ContractResult.error(errorMsg);
       }
     } catch (e) {
       return ContractResult.error('Impossible de creer le contrat: $e');
