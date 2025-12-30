@@ -966,3 +966,18 @@ def create(self, validated_data):
 - Changed field name from `customer_photo` to `customer_photo_base64`
 
 ---
+
+## Changes Made (2025-12-31) - Fix My Sales Page Issues
+
+### Issue 1: Row Overflow Fixed
+**File**: `mobile/lib/sales/my_sales_page.dart`
+- Wrapped Column in `_buildDetailItem` with `Expanded` to constrain text width
+- Prevents "RenderFlex overflowed by X pixels" error
+
+### Issue 2: N° Carte Identité Empty Fixed
+**File**: `mobile/lib/idcard/mrz_scanner_page.dart`
+- Added call to `IDCardService.saveMRZData()` before navigating to NFC reader
+- idNumber was being extracted from MRZ but never saved to SharedPreferences
+- Now idNumber is properly persisted and sent to API
+
+---
