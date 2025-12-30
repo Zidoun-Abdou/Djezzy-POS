@@ -228,6 +228,7 @@ class PDFGeneratorService {
                 pw.Divider(color: PdfColor.fromHex('#EEEEEE')),
                 _buildInfoRow('Date de naissance', personal['birthDate'] ?? '-'),
                 _buildInfoRow('Lieu de naissance', personal['birthPlace'] ?? '-'),
+                _buildInfoRowArabic('Lieu de naissance (Arabe)', personal['birthPlaceAr'] ?? '-', arabicFont),
                 _buildInfoRow('Sexe', personal['sex'] ?? '-'),
                 _buildInfoRow('Groupe sanguin', personal['bloodType'] ?? '-'),
                 pw.Divider(color: PdfColor.fromHex('#EEEEEE')),

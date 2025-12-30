@@ -5,7 +5,7 @@ import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import '../models/contract_data.dart';
 import '../services/pdf_generator_service.dart';
-import 'email_submission_page.dart';
+import 'offer_selection_page.dart';
 
 class ContractPreviewPage extends StatefulWidget {
   final ContractData contractData;
@@ -90,18 +90,12 @@ class _ContractPreviewPageState extends State<ContractPreviewPage>
     );
   }
 
-  void _proceedToEmail() {
-    if (_pdfBytes == null) return;
-
-    Navigator.pushReplacement(
-      context,
+  void _startNewContract() {
+    Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
-        builder: (_) => EmailSubmissionPage(
-          contractData: widget.contractData,
-          pdfBytes: _pdfBytes!,
-          cameras: widget.cameras,
-        ),
+        builder: (_) => OfferSelectionPage(cameras: widget.cameras),
       ),
+      (route) => false, // Remove all previous routes
     );
   }
 
@@ -419,7 +413,7 @@ class _ContractPreviewPageState extends State<ContractPreviewPage>
                 ),
                 const SizedBox(height: 16),
 
-                // Continue button
+                // New contract button
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -436,10 +430,10 @@ class _ContractPreviewPageState extends State<ContractPreviewPage>
                     ],
                   ),
                   child: ElevatedButton.icon(
-                    onPressed: _proceedToEmail,
-                    icon: const Icon(Icons.email),
+                    onPressed: _startNewContract,
+                    icon: const Icon(Icons.add_circle_outline),
                     label: const Text(
-                      'Envoyer par email',
+                      'Nouveau contrat',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,

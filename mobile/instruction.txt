@@ -786,3 +786,82 @@ pdf.addPage(
 ```
 
 ---
+
+## Contract Preview Page - Final Step (2025-12-30)
+
+### 14. Made ContractPreviewPage the Final Step of Workflow
+
+**Changes:**
+- Removed email submission step from workflow
+- ContractPreviewPage is now the last step
+- Users can share/print PDF, then start a new contract
+
+**File Modified: `lib/contract/contract_preview_page.dart`**
+
+1. **Removed email import:**
+```dart
+// Removed:
+import 'email_submission_page.dart';
+
+// Added:
+import 'offer_selection_page.dart';
+```
+
+2. **Replaced `_proceedToEmail()` with `_startNewContract()`:**
+```dart
+// Old method removed:
+void _proceedToEmail() { ... }
+
+// New method:
+void _startNewContract() {
+  Navigator.of(context).pushAndRemoveUntil(
+    MaterialPageRoute(
+      builder: (_) => OfferSelectionPage(cameras: widget.cameras),
+    ),
+    (route) => false, // Remove all previous routes
+  );
+}
+```
+
+3. **Replaced button:**
+```dart
+// Old:
+ElevatedButton.icon(
+  onPressed: _proceedToEmail,
+  icon: const Icon(Icons.email),
+  label: const Text('Envoyer par email'),
+  ...
+)
+
+// New:
+ElevatedButton.icon(
+  onPressed: _startNewContract,
+  icon: const Icon(Icons.add_circle_outline),
+  label: const Text('Nouveau contrat'),
+  ...
+)
+```
+
+### 15. Added Arabic Birth Place to PDF
+
+**File Modified: `lib/services/pdf_generator_service.dart`**
+
+Added Arabic birth place field in the client info section:
+```dart
+_buildInfoRow('Lieu de naissance', personal['birthPlace'] ?? '-'),
+_buildInfoRowArabic('Lieu de naissance (Arabe)', personal['birthPlaceAr'] ?? '-', arabicFont),
+_buildInfoRow('Sexe', personal['sex'] ?? '-'),
+```
+
+**New PDF Layout includes:**
+- Lieu de naissance (French)
+- Lieu de naissance (Arabe) - RTL Arabic text
+
+**Workflow Now:**
+```
+Offer Selection → Number Selection → Scan Intro → MRZ Scan → NFC Read → Signature → Contract Preview (FINAL)
+                                                                                         ↓
+                                                                                    [Nouveau contrat] → Back to Offer Selection
+```
+
+---
