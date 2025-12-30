@@ -928,3 +928,41 @@ Phone disappears from available list → Agent sees in "Mes Ventes"
 - `GET /api/contracts/my-stats/` - Agent's statistics (total, today, this_month)
 
 ---
+
+## Changes Made (2025-12-31) - Fix Contract Creation Error
+
+### Issue
+Contract creation from mobile app failed with "Erreur lors de la creation du contrat" error, while "Mes Ventes" history page worked correctly.
+
+### Root Cause
+The `customer_photo` field mismatch:
+- Mobile app sent `customer_photo` as a base64 string
+- Django model defined `customer_photo` as `ImageField` (expects file, not string)
+- `ImageField` cannot accept base64 strings directly
+
+### Solution
+
+**Backend Changes (`backend/apps/contracts/serializers.py`):**
+- Added `customer_photo_base64` field (CharField, write_only)
+- In `create()` method: decode base64 and convert to file using `ContentFile`
+- Changed field from `customer_photo` to `customer_photo_base64`
+
+```python
+customer_photo_base64 = serializers.CharField(
+    write_only=True, required=False, allow_blank=True, allow_null=True
+)
+
+def create(self, validated_data):
+    photo_base64 = validated_data.pop('customer_photo_base64', None)
+    if photo_base64:
+        image_data = base64.b64decode(photo_base64)
+        validated_data['customer_photo'] = ContentFile(
+            image_data,
+            name=f"photo_{nin}.jpg"
+        )
+```
+
+**Mobile Changes (`lib/services/api_service.dart`):**
+- Changed field name from `customer_photo` to `customer_photo_base64`
+
+---
