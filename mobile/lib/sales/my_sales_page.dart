@@ -437,26 +437,28 @@ class _MySalesPageState extends State<MySalesPage> {
       children: [
         Icon(icon, size: 16, color: Colors.grey[500]),
         const SizedBox(width: 6),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 10,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.grey[500],
+                  fontSize: 10,
+                ),
               ),
-            ),
-            Text(
-              value,
-              style: TextStyle(
-                color: Colors.grey[800],
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+              Text(
+                value,
+                style: TextStyle(
+                  color: Colors.grey[800],
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );

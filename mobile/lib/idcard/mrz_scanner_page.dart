@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import '../utils/helpers.dart';
 import '../models/contract_data.dart';
+import '../services/id_card_service.dart';
 import 'read_nfc_page.dart';
 
 class MrzScannerPage extends StatefulWidget {
@@ -381,6 +382,13 @@ Date d'expiration: $expiryDate
           }
           return usDate;
         }
+
+        // Save MRZ data to persistent storage (including idNumber)
+        await IDCardService.saveMRZData(
+          extractedData!['idNumber']!,
+          extractedData!['birthDate']!,
+          extractedData!['expiryDate']!,
+        );
 
         final result = await Navigator.of(context).push(MaterialPageRoute(
           builder: (_) => ReadNfcPage(
