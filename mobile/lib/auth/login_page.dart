@@ -76,22 +76,11 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 60),
                 // Logo
                 Center(
-                  child: Container(
+                  child: Image.asset(
+                    'assets/images/djezzy_logo.png',
                     width: 140,
                     height: 140,
-                    decoration: BoxDecoration(
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFED1C24).withOpacity(0.2),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: Image.asset(
-                      'assets/images/djezzy_logo.png',
-                      fit: BoxFit.contain,
-                    ),
+                    fit: BoxFit.contain,
                   ),
                 ),
                 const SizedBox(height: 32),
