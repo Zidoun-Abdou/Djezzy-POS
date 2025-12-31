@@ -1,3 +1,4 @@
+{% load static %}
 <!-- Mobile Overlay -->
 <div x-show="mobileMenuOpen"
      x-transition:enter="transition-opacity ease-linear duration-300"
@@ -15,8 +16,8 @@
        class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
 
     <!-- Logo -->
-    <div class="h-16 flex items-center justify-center border-b border-gray-200 bg-djezzy">
-        <span class="text-2xl font-bold text-white">Djezzy POS</span>
+    <div class="h-16 flex items-center justify-center border-b border-gray-200 bg-djezzy px-4">
+        <img src="{% static 'dashboard/images/djezzy_logo.png' %}" alt="Djezzy POS" class="h-10">
     </div>
 
     <!-- Navigation -->
