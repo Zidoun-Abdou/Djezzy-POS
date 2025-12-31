@@ -16,7 +16,7 @@ class OfferSerializer(serializers.ModelSerializer):
             'id', 'name', 'code', 'description', 'price', 'currency',
             'data_allowance_mb', 'data_allowance_gb', 'voice_minutes',
             'sms_count', 'validity_days', 'features', 'is_active',
-            'is_featured', 'display_order', 'formatted_price',
+            'display_order', 'formatted_price',
             'available_phone_numbers', 'available_count',
             'created_at', 'updated_at'
         ]

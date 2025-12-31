@@ -7,11 +7,11 @@ from .models import Offer
 class OfferAdmin(admin.ModelAdmin):
     list_display = [
         'name', 'code', 'formatted_price_display', 'data_display',
-        'validity_display', 'is_active', 'is_featured', 'display_order'
+        'validity_display', 'is_active', 'display_order'
     ]
-    list_filter = ['is_active', 'is_featured', 'validity_days']
+    list_filter = ['is_active', 'validity_days']
     search_fields = ['name', 'code', 'description']
-    list_editable = ['display_order', 'is_active', 'is_featured']
+    list_editable = ['display_order', 'is_active']
     ordering = ['display_order', 'name']
 
     fieldsets = [
@@ -25,11 +25,11 @@ class OfferAdmin(admin.ModelAdmin):
             'fields': ['data_allowance_mb', 'voice_minutes', 'sms_count', 'features']
         }),
         ('Affichage', {
-            'fields': ['is_active', 'is_featured', 'display_order']
+            'fields': ['is_active', 'display_order']
         }),
     ]
 
-    actions = ['activate_offers', 'deactivate_offers', 'feature_offers', 'unfeature_offers']
+    actions = ['activate_offers', 'deactivate_offers']
 
     @admin.display(description='Prix')
     def formatted_price_display(self, obj):
@@ -62,13 +62,3 @@ class OfferAdmin(admin.ModelAdmin):
     def deactivate_offers(self, request, queryset):
         updated = queryset.update(is_active=False)
         self.message_user(request, f'{updated} offre(s) desactivee(s).')
-
-    @admin.action(description='Mettre en vedette')
-    def feature_offers(self, request, queryset):
-        updated = queryset.update(is_featured=True)
-        self.message_user(request, f'{updated} offre(s) mise(s) en vedette.')
-
-    @admin.action(description='Retirer de la vedette')
-    def unfeature_offers(self, request, queryset):
-        updated = queryset.update(is_featured=False)
-        self.message_user(request, f'{updated} offre(s) retiree(s) de la vedette.')

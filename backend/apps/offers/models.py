@@ -57,10 +57,6 @@ class Offer(models.Model):
         default=True,
         verbose_name='Actif'
     )
-    is_featured = models.BooleanField(
-        default=False,
-        verbose_name='Mis en avant'
-    )
     display_order = models.PositiveIntegerField(
         default=0,
         verbose_name='Ordre d\'affichage'
@@ -77,7 +73,7 @@ class Offer(models.Model):
     class Meta:
         verbose_name = 'Offre'
         verbose_name_plural = 'Offres'
-        ordering = ['display_order', '-is_featured', 'name']
+        ordering = ['display_order', 'name']
 
     def __str__(self):
         return f"{self.name} - {self.price} {self.currency}"

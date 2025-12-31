@@ -25,7 +25,6 @@
             <select x-model="statusFilter" @change="filterOffers()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy">
                 <option value="">Toutes les offres</option>
                 <option value="active">Actives seulement</option>
-                <option value="featured">Mises en avant</option>
             </select>
         </div>
 
@@ -55,15 +54,10 @@
 
         <!-- Offers -->
         <template x-for="offer in filteredOffers" :key="offer.id">
-            <div class="bg-white rounded-xl shadow-sm overflow-hidden" :class="{'ring-2 ring-djezzy': offer.is_featured}">
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                 <!-- Header -->
                 <div class="px-6 py-4 bg-gradient-to-r from-djezzy to-djezzy-dark">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-bold text-white" x-text="offer.name"></h3>
-                        <span x-show="offer.is_featured" class="bg-white/20 text-white text-xs px-2 py-1 rounded-full">
-                            En avant
-                        </span>
-                    </div>
+                    <h3 class="text-lg font-bold text-white" x-text="offer.name"></h3>
                     <p class="text-white/80 text-sm" x-text="offer.code"></p>
                 </div>
 
@@ -98,22 +92,13 @@
                         </div>
                     </div>
 
-                    <!-- Toggles -->
-                    <div class="flex items-center justify-between py-3 border-t border-gray-200">
-                        <div class="flex items-center">
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" :checked="offer.is_active" @change="toggleActive(offer)" class="sr-only peer">
-                                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
-                            </label>
-                            <span class="ml-2 text-xs text-gray-500">Active</span>
-                        </div>
-                        <div class="flex items-center">
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" :checked="offer.is_featured" @change="toggleFeatured(offer)" class="sr-only peer">
-                                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-djezzy"></div>
-                            </label>
-                            <span class="ml-2 text-xs text-gray-500">En avant</span>
-                        </div>
+                    <!-- Toggle Active -->
+                    <div class="flex items-center py-3 border-t border-gray-200">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" :checked="offer.is_active" @change="toggleActive(offer)" class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
+                        <span class="ml-2 text-xs text-gray-500">Active</span>
                     </div>
 
                     <!-- Actions -->
@@ -198,14 +183,10 @@
                         <textarea x-model="featuresText" rows="3" placeholder="Appels illimites vers Djezzy&#10;Internet 4G&#10;SMS illimites" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-djezzy focus:border-djezzy"></textarea>
                     </div>
 
-                    <div class="flex items-center space-x-6">
+                    <div class="flex items-center">
                         <label class="flex items-center">
                             <input type="checkbox" x-model="form.is_active" class="w-4 h-4 text-djezzy border-gray-300 rounded focus:ring-djezzy">
                             <span class="ml-2 text-sm text-gray-700">Active</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" x-model="form.is_featured" class="w-4 h-4 text-djezzy border-gray-300 rounded focus:ring-djezzy">
-                            <span class="ml-2 text-sm text-gray-700">Mise en avant</span>
                         </label>
                     </div>
 
@@ -271,7 +252,6 @@ function offersManager() {
             sms_count: 0,
             validity_days: 30,
             is_active: true,
-            is_featured: false,
             features: []
         },
 
@@ -294,8 +274,7 @@ function offersManager() {
                     offer.code.toLowerCase().includes(this.searchQuery.toLowerCase());
 
                 const matchesStatus = !this.statusFilter ||
-                    (this.statusFilter === 'active' && offer.is_active) ||
-                    (this.statusFilter === 'featured' && offer.is_featured);
+                    (this.statusFilter === 'active' && offer.is_active);
 
                 return matchesSearch && matchesStatus;
             });
@@ -303,7 +282,7 @@ function offersManager() {
 
         openCreateModal() {
             this.editingId = null;
-            this.form = { name: '', code: '', description: '', price: 0, data_allowance_mb: 0, voice_minutes: 0, sms_count: 0, validity_days: 30, is_active: true, is_featured: false, features: [] };
+            this.form = { name: '', code: '', description: '', price: 0, data_allowance_mb: 0, voice_minutes: 0, sms_count: 0, validity_days: 30, is_active: true, features: [] };
             this.featuresText = '';
             this.showModal = true;
         },
@@ -345,18 +324,6 @@ function offersManager() {
                 if (response.ok) {
                     offer.is_active = !offer.is_active;
                     showToast(offer.is_active ? 'Offre activee' : 'Offre desactivee', 'success');
-                }
-            } catch (error) {
-                showToast('Erreur', 'error');
-            }
-        },
-
-        async toggleFeatured(offer) {
-            try {
-                const response = await api.patch(`/offers/${offer.id}/`, { is_featured: !offer.is_featured });
-                if (response.ok) {
-                    offer.is_featured = !offer.is_featured;
-                    showToast(offer.is_featured ? 'Offre mise en avant' : 'Offre retiree de la mise en avant', 'success');
                 }
             } catch (error) {
                 showToast('Erreur', 'error');
