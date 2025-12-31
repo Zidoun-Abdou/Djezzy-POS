@@ -13,7 +13,7 @@ class OfferViewSet(viewsets.ModelViewSet):
     queryset = Offer.objects.all()
     serializer_class = OfferSerializer
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['is_active', 'is_featured']
+    filterset_fields = ['is_active']
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve', 'active']:
