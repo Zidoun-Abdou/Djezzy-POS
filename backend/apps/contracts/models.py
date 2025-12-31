@@ -18,10 +18,7 @@ class Contract(models.Model):
     """Contract model for Djezzy subscriptions."""
 
     STATUS_CHOICES = [
-        ('draft', 'Brouillon'),
-        ('signed', 'Signe'),
         ('validated', 'Valide'),
-        ('cancelled', 'Annule'),
     ]
 
     # Contract identification
@@ -141,7 +138,7 @@ class Contract(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default='draft',
+        default='validated',
         verbose_name='Statut'
     )
 
