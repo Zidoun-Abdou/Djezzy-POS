@@ -22,7 +22,8 @@
             </div>
         </div>
 
-        <!-- Bulk Actions -->
+        {% if user.role == 'admin' %}
+        <!-- Bulk Actions (Admin Only) -->
         <div class="flex items-center gap-3" x-show="selectedIds.length > 0">
             <span class="text-sm text-gray-600" x-text="selectedIds.length + ' selectionne(s)'"></span>
             <select x-model="bulkAction" @change="bulkChangeStatus()" class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
@@ -32,6 +33,7 @@
                 <option value="blocked">Marquer bloque</option>
             </select>
         </div>
+        {% endif %}
     </div>
 
     <!-- Status Tabs -->
@@ -51,9 +53,10 @@
         <button @click="statusFilter = 'assigned'; filterPhones()"
                 :class="statusFilter === 'assigned' ? 'bg-white shadow' : 'hover:bg-white/50'"
                 class="px-4 py-2 text-sm font-medium rounded-md transition-colors text-blue-600">
-            Attribues
+            Distribues
             <span class="ml-1 text-xs" x-text="'(' + phones.filter(p => p.status === 'assigned').length + ')'"></span>
         </button>
+        {% if user.role == 'admin' %}
         <button @click="statusFilter = 'reserved'; filterPhones()"
                 :class="statusFilter === 'reserved' ? 'bg-white shadow' : 'hover:bg-white/50'"
                 class="px-4 py-2 text-sm font-medium rounded-md transition-colors text-yellow-600">
@@ -66,6 +69,7 @@
             Bloques
             <span class="ml-1 text-xs" x-text="'(' + phones.filter(p => p.status === 'blocked').length + ')'"></span>
         </button>
+        {% endif %}
     </div>
 
     <!-- Table -->
@@ -74,18 +78,22 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
+                        {% if user.role == 'admin' %}
                         <th class="px-6 py-3 text-left">
                             <input type="checkbox"
                                    @change="toggleSelectAll()"
                                    :checked="selectedIds.length > 0 && selectedIds.length === filteredPhones.length"
                                    class="w-4 h-4 text-djezzy border-gray-300 rounded focus:ring-djezzy">
                         </th>
+                        {% endif %}
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Numero</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Offre</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Attribue a</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        {% if user.role == 'admin' %}
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        {% endif %}
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -113,12 +121,14 @@
                     <!-- Rows -->
                     <template x-for="phone in filteredPhones" :key="phone.id">
                         <tr class="hover:bg-gray-50">
+                            {% if user.role == 'admin' %}
                             <td class="px-6 py-4">
                                 <input type="checkbox"
                                        :value="phone.id"
                                        x-model="selectedIds"
                                        class="w-4 h-4 text-djezzy border-gray-300 rounded focus:ring-djezzy">
                             </td>
+                            {% endif %}
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="text-sm font-mono font-medium text-gray-900" x-text="phone.formatted_number || phone.number"></span>
                             </td>
@@ -135,6 +145,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="phone.assigned_to_name || '-'"></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="phone.assigned_date ? formatDate(phone.assigned_date) : '-'"></td>
+                            {% if user.role == 'admin' %}
                             <td class="px-6 py-4 whitespace-nowrap text-right">
                                 <div class="relative" x-data="{ open: false }">
                                     <button @click="open = !open" class="p-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100">
@@ -162,6 +173,7 @@
                                     </div>
                                 </div>
                             </td>
+                            {% endif %}
                         </tr>
                     </template>
                 </tbody>
@@ -208,7 +220,7 @@ function phoneNumbersManager() {
         getStatusLabel(status) {
             const labels = {
                 'available': 'Disponible',
-                'assigned': 'Attribue',
+                'assigned': 'Distribue',
                 'reserved': 'Reserve',
                 'blocked': 'Bloque'
             };
