@@ -1,0 +1,54 @@
+# Djezzy POS - Change Log & Instructions
+
+## 2026-01-03: Role-Based Access Control for Agent Commercial
+
+### Issue Fixed
+- Agent Commercial users could see admin-only features like:
+  - "Ajouter une offre" button
+  - "Gérer les utilisateurs" button
+  - Edit/Delete buttons on offer cards
+  - Toggle switches for offer active status
+  - Wrong status displays (4 statuses instead of correct ones)
+
+### Changes Made
+
+#### 1. Dashboard (index.html)
+- **Admin Dashboard**: Shows all 4 stat cards (Utilisateurs, Offres, Numeros, Contrats) + status bars + all quick links
+- **Agent Dashboard**: Shows 3 stat cards (Mes Ventes, Offres, Numeros) + beautiful Chart.js charts:
+  - Ma Performance: Line chart showing validated sales for last 7 days
+  - Numeros Disponibles: Donut chart showing available vs distributed numbers
+  - Top Offres Vendues: Horizontal bar chart showing top 5 offers sold
+
+#### 2. Offers Page (offers.html)
+- Hidden from Agent Commercial:
+  - "Ajouter une offre" button
+  - Toggle switches for active status
+  - Edit/Delete buttons on offer cards
+  - Create/Edit modal
+  - Delete confirmation modal
+
+#### 3. Status Simplification
+- **Numbers**: Only show "Disponibles" and "Distribués" (was showing 4 statuses)
+- **Contracts**: Only show "Validés" (was showing 4 statuses)
+
+#### 4. Backend Enhancement (contracts/views.py)
+- Enhanced `/api/contracts/my-stats/` endpoint to return:
+  - `total`: Total contracts count
+  - `today`: Contracts created today
+  - `this_month`: Contracts this month
+  - `revenue`: Total revenue from validated contracts
+  - `by_offer`: Top 5 offers sold (for chart)
+  - `daily_sales`: Last 7 days sales data (for chart)
+
+### Technical Implementation
+- Used Django template conditionals: `{% if user.role == 'admin' %}` to show/hide elements
+- Added Chart.js CDN to base.html for beautiful charts
+- User roles are defined in `backend/apps/accounts/models.py`:
+  - 'admin' = Administrateur
+  - 'agent' = Agent Commercial
+
+### Files Modified
+1. `backend/apps/contracts/views.py`
+2. `backend/apps/dashboard/templates/dashboard/base.html`
+3. `backend/apps/dashboard/templates/dashboard/index.html`
+4. `backend/apps/dashboard/templates/dashboard/offers.html`
