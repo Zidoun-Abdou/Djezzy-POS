@@ -74,7 +74,7 @@ class ContractViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'], url_path='my-stats')
     def my_stats(self, request):
         """Get statistics for the authenticated user's contracts."""
-        from django.db.models import Count
+        from django.db.models import Count, Sum
         from django.utils import timezone
         from datetime import timedelta
 
@@ -87,9 +87,39 @@ class ContractViewSet(viewsets.ModelViewSet):
         this_month_count = user_contracts.filter(created_at__date__gte=this_month).count()
         by_status = user_contracts.values('status').annotate(count=Count('id'))
 
+        # Revenue from validated contracts
+        validated_contracts = user_contracts.filter(status='validated')
+        revenue = validated_contracts.aggregate(
+            total=Sum('offer__price')
+        )['total'] or 0
+
+        # Sales by offer (for Top Offers chart)
+        by_offer = user_contracts.filter(status='validated').values(
+            'offer__name', 'offer__code'
+        ).annotate(count=Count('id')).order_by('-count')[:5]
+
+        # Daily sales for last 7 days (for Sales Performance chart)
+        daily_sales = []
+        for i in range(6, -1, -1):
+            day = today - timedelta(days=i)
+            count = user_contracts.filter(
+                status='validated',
+                created_at__date=day
+            ).count()
+            daily_sales.append({
+                'date': day.strftime('%d/%m'),
+                'count': count
+            })
+
         return Response({
             'total': total,
             'today': today_count,
             'this_month': this_month_count,
             'by_status': {item['status']: item['count'] for item in by_status},
+            'revenue': float(revenue),
+            'by_offer': [
+                {'name': item['offer__name'], 'code': item['offer__code'], 'count': item['count']}
+                for item in by_offer
+            ],
+            'daily_sales': daily_sales,
         })

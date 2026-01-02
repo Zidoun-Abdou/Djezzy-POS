@@ -3,7 +3,9 @@
 {% block title %}Tableau de bord - Djezzy POS{% endblock %}
 
 {% block content %}
-<div x-data="dashboardStats()" x-init="fetchStats()">
+{% if user.role == 'admin' %}
+<!-- ==================== ADMIN DASHBOARD ==================== -->
+<div x-data="adminDashboard()" x-init="fetchStats()">
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Users Card -->
@@ -50,7 +52,6 @@
             </div>
             <div class="mt-4 flex space-x-4 text-xs text-gray-500" x-show="!loading">
                 <span><span class="font-medium text-green-600" x-text="stats.offers.active"></span> Actives</span>
-                <span><span class="font-medium text-yellow-600" x-text="stats.offers.featured"></span> Mises en avant</span>
             </div>
         </div>
 
@@ -74,7 +75,7 @@
             </div>
             <div class="mt-4 flex space-x-4 text-xs text-gray-500" x-show="!loading">
                 <span><span class="font-medium text-green-600" x-text="stats.phones.available"></span> Disponibles</span>
-                <span><span class="font-medium text-blue-600" x-text="stats.phones.assigned"></span> Attribues</span>
+                <span><span class="font-medium text-blue-600" x-text="stats.phones.distributed"></span> Distribues</span>
             </div>
         </div>
 
@@ -97,13 +98,12 @@
                 </div>
             </div>
             <div class="mt-4 flex space-x-4 text-xs text-gray-500" x-show="!loading">
-                <span><span class="font-medium text-yellow-600" x-text="stats.contracts.signed"></span> Signes</span>
                 <span><span class="font-medium text-green-600" x-text="stats.contracts.validated"></span> Valides</span>
             </div>
         </div>
     </div>
 
-    <!-- Quick Actions -->
+    <!-- Status Sections -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Phone Numbers Status -->
         <div class="bg-white rounded-xl shadow-sm p-6">
@@ -119,30 +119,12 @@
                     </div>
                 </div>
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Attribues</span>
+                    <span class="text-sm text-gray-600">Distribues</span>
                     <div class="flex items-center">
                         <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                            <div class="bg-blue-500 h-2 rounded-full" :style="'width: ' + stats.phones.assignedPercent + '%'"></div>
+                            <div class="bg-blue-500 h-2 rounded-full" :style="'width: ' + stats.phones.distributedPercent + '%'"></div>
                         </div>
-                        <span class="text-sm font-medium text-gray-900" x-text="stats.phones.assigned"></span>
-                    </div>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Reserves</span>
-                    <div class="flex items-center">
-                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                            <div class="bg-yellow-500 h-2 rounded-full" :style="'width: ' + stats.phones.reservedPercent + '%'"></div>
-                        </div>
-                        <span class="text-sm font-medium text-gray-900" x-text="stats.phones.reserved"></span>
-                    </div>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Bloques</span>
-                    <div class="flex items-center">
-                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                            <div class="bg-red-500 h-2 rounded-full" :style="'width: ' + stats.phones.blockedPercent + '%'"></div>
-                        </div>
-                        <span class="text-sm font-medium text-gray-900" x-text="stats.phones.blocked"></span>
+                        <span class="text-sm font-medium text-gray-900" x-text="stats.phones.distributed"></span>
                     </div>
                 </div>
             </div>
@@ -153,39 +135,12 @@
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Statut des contrats</h3>
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Brouillons</span>
-                    <div class="flex items-center">
-                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                            <div class="bg-gray-500 h-2 rounded-full" :style="'width: ' + stats.contracts.draftPercent + '%'"></div>
-                        </div>
-                        <span class="text-sm font-medium text-gray-900" x-text="stats.contracts.draft"></span>
-                    </div>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Signes</span>
-                    <div class="flex items-center">
-                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                            <div class="bg-yellow-500 h-2 rounded-full" :style="'width: ' + stats.contracts.signedPercent + '%'"></div>
-                        </div>
-                        <span class="text-sm font-medium text-gray-900" x-text="stats.contracts.signed"></span>
-                    </div>
-                </div>
-                <div class="flex items-center justify-between">
                     <span class="text-sm text-gray-600">Valides</span>
                     <div class="flex items-center">
                         <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
                             <div class="bg-green-500 h-2 rounded-full" :style="'width: ' + stats.contracts.validatedPercent + '%'"></div>
                         </div>
                         <span class="text-sm font-medium text-gray-900" x-text="stats.contracts.validated"></span>
-                    </div>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600">Annules</span>
-                    <div class="flex items-center">
-                        <div class="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                            <div class="bg-red-500 h-2 rounded-full" :style="'width: ' + stats.contracts.cancelledPercent + '%'"></div>
-                        </div>
-                        <span class="text-sm font-medium text-gray-900" x-text="stats.contracts.cancelled"></span>
                     </div>
                 </div>
             </div>
@@ -229,18 +184,159 @@
     </div>
 </div>
 
+{% else %}
+<!-- ==================== AGENT COMMERCIAL DASHBOARD ==================== -->
+<div x-data="agentDashboard()" x-init="init()">
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- My Sales Card -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-djezzy/10 text-djezzy">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Mes Ventes</p>
+                    <template x-if="loading">
+                        <div class="h-8 w-16 bg-gray-200 rounded animate-pulse mt-1"></div>
+                    </template>
+                    <template x-if="!loading">
+                        <p class="text-2xl font-bold text-gray-900" x-text="stats.total"></p>
+                    </template>
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-4 text-xs text-gray-500" x-show="!loading">
+                <span class="flex items-center">
+                    <span class="font-medium text-green-600" x-text="'+' + stats.today"></span>
+                    <span class="ml-1">aujourd'hui</span>
+                </span>
+                <span class="flex items-center">
+                    <span class="font-medium text-blue-600" x-text="stats.this_month"></span>
+                    <span class="ml-1">ce mois</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Offers Card -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Offres</p>
+                    <template x-if="loading">
+                        <div class="h-8 w-16 bg-gray-200 rounded animate-pulse mt-1"></div>
+                    </template>
+                    <template x-if="!loading">
+                        <p class="text-2xl font-bold text-gray-900" x-text="offersStats.total"></p>
+                    </template>
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-4 text-xs text-gray-500" x-show="!loading">
+                <span><span class="font-medium text-green-600" x-text="offersStats.active"></span> Actives</span>
+            </div>
+        </div>
+
+        <!-- Phone Numbers Card -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-500">Numeros</p>
+                    <template x-if="loading">
+                        <div class="h-8 w-16 bg-gray-200 rounded animate-pulse mt-1"></div>
+                    </template>
+                    <template x-if="!loading">
+                        <p class="text-2xl font-bold text-gray-900" x-text="phonesStats.total"></p>
+                    </template>
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-4 text-xs text-gray-500" x-show="!loading">
+                <span><span class="font-medium text-green-600" x-text="phonesStats.available"></span> Disponibles</span>
+                <span><span class="font-medium text-blue-600" x-text="phonesStats.distributed"></span> Distribues</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Sales Performance Chart -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Ma Performance</h3>
+            <p class="text-sm text-gray-500 mb-4">Ventes validees des 7 derniers jours</p>
+            <div class="relative h-64">
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Numbers Distribution Chart -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Numeros Disponibles</h3>
+            <p class="text-sm text-gray-500 mb-4">Repartition des numeros</p>
+            <div class="relative h-64 flex items-center justify-center">
+                <canvas id="numbersChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Offers Chart -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Top Offres Vendues</h3>
+        <p class="text-sm text-gray-500 mb-4">Vos meilleures ventes</p>
+        <div class="relative h-64">
+            <canvas id="topOffersChart"></canvas>
+        </div>
+        <template x-if="!loading && stats.by_offer.length === 0">
+            <div class="absolute inset-0 flex items-center justify-center">
+                <p class="text-gray-400">Aucune vente pour le moment</p>
+            </div>
+        </template>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="grid grid-cols-2 gap-4">
+        <a href="{% url 'dashboard:phone_numbers' %}" class="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow flex items-center">
+            <div class="p-2 rounded-lg bg-green-100 text-green-600 mr-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Voir les numeros</span>
+        </a>
+        <a href="{% url 'dashboard:contracts' %}" class="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition-shadow flex items-center">
+            <div class="p-2 rounded-lg bg-purple-100 text-purple-600 mr-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Voir les contrats</span>
+        </a>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-function dashboardStats() {
+{% if user.role == 'admin' %}
+// ==================== ADMIN DASHBOARD SCRIPT ====================
+function adminDashboard() {
     return {
         loading: true,
         stats: {
             users: { total: 0, agents: 0, managers: 0 },
-            offers: { total: 0, active: 0, featured: 0 },
-            phones: { total: 0, available: 0, assigned: 0, reserved: 0, blocked: 0, availablePercent: 0, assignedPercent: 0, reservedPercent: 0, blockedPercent: 0 },
-            contracts: { total: 0, draft: 0, signed: 0, validated: 0, cancelled: 0, draftPercent: 0, signedPercent: 0, validatedPercent: 0, cancelledPercent: 0 }
+            offers: { total: 0, active: 0 },
+            phones: { total: 0, available: 0, distributed: 0, availablePercent: 0, distributedPercent: 0 },
+            contracts: { total: 0, validated: 0, validatedPercent: 0 }
         },
 
         async fetchStats() {
@@ -263,38 +359,27 @@ function dashboardStats() {
                 const offerList = offers.results || offers;
                 this.stats.offers.total = offerList.length;
                 this.stats.offers.active = offerList.filter(o => o.is_active).length;
-                this.stats.offers.featured = offerList.filter(o => o.is_featured).length;
 
-                // Process phones
+                // Process phones - only available and distributed (assigned = distributed)
                 const phoneList = phones.results || phones;
                 this.stats.phones.total = phoneList.length;
                 this.stats.phones.available = phoneList.filter(p => p.status === 'available').length;
-                this.stats.phones.assigned = phoneList.filter(p => p.status === 'assigned').length;
-                this.stats.phones.reserved = phoneList.filter(p => p.status === 'reserved').length;
-                this.stats.phones.blocked = phoneList.filter(p => p.status === 'blocked').length;
+                this.stats.phones.distributed = phoneList.filter(p => p.status === 'assigned').length;
 
                 // Calculate percentages
                 if (this.stats.phones.total > 0) {
                     this.stats.phones.availablePercent = (this.stats.phones.available / this.stats.phones.total * 100).toFixed(0);
-                    this.stats.phones.assignedPercent = (this.stats.phones.assigned / this.stats.phones.total * 100).toFixed(0);
-                    this.stats.phones.reservedPercent = (this.stats.phones.reserved / this.stats.phones.total * 100).toFixed(0);
-                    this.stats.phones.blockedPercent = (this.stats.phones.blocked / this.stats.phones.total * 100).toFixed(0);
+                    this.stats.phones.distributedPercent = (this.stats.phones.distributed / this.stats.phones.total * 100).toFixed(0);
                 }
 
-                // Process contracts
+                // Process contracts - only validated
                 this.stats.contracts.total = contractStats.total || 0;
                 const byStatus = contractStats.by_status || {};
-                this.stats.contracts.draft = byStatus.draft || 0;
-                this.stats.contracts.signed = byStatus.signed || 0;
                 this.stats.contracts.validated = byStatus.validated || 0;
-                this.stats.contracts.cancelled = byStatus.cancelled || 0;
 
-                // Calculate contract percentages
+                // Calculate contract percentage
                 if (this.stats.contracts.total > 0) {
-                    this.stats.contracts.draftPercent = (this.stats.contracts.draft / this.stats.contracts.total * 100).toFixed(0);
-                    this.stats.contracts.signedPercent = (this.stats.contracts.signed / this.stats.contracts.total * 100).toFixed(0);
                     this.stats.contracts.validatedPercent = (this.stats.contracts.validated / this.stats.contracts.total * 100).toFixed(0);
-                    this.stats.contracts.cancelledPercent = (this.stats.contracts.cancelled / this.stats.contracts.total * 100).toFixed(0);
                 }
 
             } catch (error) {
@@ -305,5 +390,199 @@ function dashboardStats() {
         }
     };
 }
+{% else %}
+// ==================== AGENT COMMERCIAL DASHBOARD SCRIPT ====================
+function agentDashboard() {
+    return {
+        loading: true,
+        stats: {
+            total: 0,
+            today: 0,
+            this_month: 0,
+            revenue: 0,
+            by_offer: [],
+            daily_sales: []
+        },
+        offersStats: { total: 0, active: 0 },
+        phonesStats: { total: 0, available: 0, distributed: 0 },
+        salesChart: null,
+        numbersChart: null,
+        topOffersChart: null,
+
+        async init() {
+            this.loading = true;
+            try {
+                const [myStats, offers, phones] = await Promise.all([
+                    api.get('/contracts/my-stats/'),
+                    api.get('/offers/'),
+                    api.get('/phone-numbers/')
+                ]);
+
+                // My stats
+                this.stats.total = myStats.total || 0;
+                this.stats.today = myStats.today || 0;
+                this.stats.this_month = myStats.this_month || 0;
+                this.stats.revenue = myStats.revenue || 0;
+                this.stats.by_offer = myStats.by_offer || [];
+                this.stats.daily_sales = myStats.daily_sales || [];
+
+                // Offers
+                const offerList = offers.results || offers;
+                this.offersStats.total = offerList.length;
+                this.offersStats.active = offerList.filter(o => o.is_active).length;
+
+                // Phones - only available and distributed
+                const phoneList = phones.results || phones;
+                this.phonesStats.total = phoneList.length;
+                this.phonesStats.available = phoneList.filter(p => p.status === 'available').length;
+                this.phonesStats.distributed = phoneList.filter(p => p.status === 'assigned').length;
+
+                this.loading = false;
+
+                // Initialize charts after data is loaded
+                this.$nextTick(() => {
+                    this.initCharts();
+                });
+
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+                showToast('Erreur lors du chargement des statistiques', 'error');
+                this.loading = false;
+            }
+        },
+
+        initCharts() {
+            this.initSalesChart();
+            this.initNumbersChart();
+            this.initTopOffersChart();
+        },
+
+        initSalesChart() {
+            const ctx = document.getElementById('salesChart');
+            if (!ctx) return;
+
+            const labels = this.stats.daily_sales.map(d => d.date);
+            const data = this.stats.daily_sales.map(d => d.count);
+
+            this.salesChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ventes',
+                        data: data,
+                        borderColor: '#ED1C24',
+                        backgroundColor: 'rgba(237, 28, 36, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#ED1C24',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        },
+
+        initNumbersChart() {
+            const ctx = document.getElementById('numbersChart');
+            if (!ctx) return;
+
+            this.numbersChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Disponibles', 'Distribues'],
+                    datasets: [{
+                        data: [this.phonesStats.available, this.phonesStats.distributed],
+                        backgroundColor: ['#10B981', '#3B82F6'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        }
+                    }
+                }
+            });
+        },
+
+        initTopOffersChart() {
+            const ctx = document.getElementById('topOffersChart');
+            if (!ctx) return;
+
+            const labels = this.stats.by_offer.map(o => o.name || 'N/A');
+            const data = this.stats.by_offer.map(o => o.count);
+
+            this.topOffersChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ventes',
+                        data: data,
+                        backgroundColor: [
+                            'rgba(237, 28, 36, 0.9)',
+                            'rgba(237, 28, 36, 0.7)',
+                            'rgba(237, 28, 36, 0.5)',
+                            'rgba(237, 28, 36, 0.4)',
+                            'rgba(237, 28, 36, 0.3)'
+                        ],
+                        borderRadius: 8,
+                        barThickness: 30
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        y: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+    };
+}
+{% endif %}
 </script>
 {% endblock %}

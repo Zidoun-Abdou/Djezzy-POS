@@ -28,7 +28,8 @@
             </select>
         </div>
 
-        <!-- Add Button -->
+        <!-- Add Button (Admin Only) -->
+        {% if user.role == 'admin' %}
         <button @click="openCreateModal()"
                 class="bg-djezzy text-white px-4 py-2 rounded-lg hover:bg-djezzy-dark transition-colors flex items-center justify-center">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,6 +37,7 @@
             </svg>
             Ajouter une offre
         </button>
+        {% endif %}
     </div>
 
     <!-- Offers Grid -->
@@ -92,7 +94,8 @@
                         </div>
                     </div>
 
-                    <!-- Toggle Active -->
+                    {% if user.role == 'admin' %}
+                    <!-- Toggle Active (Admin Only) -->
                     <div class="flex items-center py-3 border-t border-gray-200">
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" :checked="offer.is_active" @change="toggleActive(offer)" class="sr-only peer">
@@ -101,7 +104,7 @@
                         <span class="ml-2 text-xs text-gray-500">Active</span>
                     </div>
 
-                    <!-- Actions -->
+                    <!-- Actions (Admin Only) -->
                     <div class="flex justify-end space-x-2 pt-3 border-t border-gray-200">
                         <button @click="openEditModal(offer)" class="p-2 text-gray-600 hover:text-djezzy rounded-lg hover:bg-gray-100">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,6 +117,7 @@
                             </svg>
                         </button>
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </template>
@@ -126,7 +130,8 @@
         </template>
     </div>
 
-    <!-- Create/Edit Modal -->
+    {% if user.role == 'admin' %}
+    <!-- Create/Edit Modal (Admin Only) -->
     <div x-show="showModal" x-transition class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
         <div class="fixed inset-0 bg-black/50" @click="showModal = false"></div>
         <div class="flex items-center justify-center min-h-screen p-4">
@@ -203,7 +208,7 @@
         </div>
     </div>
 
-    <!-- Delete Confirmation -->
+    <!-- Delete Confirmation (Admin Only) -->
     <div x-show="showDeleteModal" x-transition class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
         <div class="fixed inset-0 bg-black/50" @click="showDeleteModal = false"></div>
         <div class="flex items-center justify-center min-h-screen p-4">
@@ -224,6 +229,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 {% endblock %}
 
