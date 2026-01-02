@@ -52,3 +52,22 @@
 2. `backend/apps/dashboard/templates/dashboard/base.html`
 3. `backend/apps/dashboard/templates/dashboard/index.html`
 4. `backend/apps/dashboard/templates/dashboard/offers.html`
+
+---
+
+## 2026-01-03: Phone Numbers Page - Role-Based Access Control
+
+### Issue Fixed
+- Agent Commercial could change phone number statuses (should be admin only)
+
+### Changes Made (phone_numbers.html)
+- **Hidden from Agent Commercial**:
+  - Bulk actions dropdown (select multiple + change status)
+  - Checkbox column for selecting numbers
+  - Actions column with status change dropdown
+  - "Réservés" and "Bloqués" status tabs
+- **Renamed**: "Attribués" → "Distribués" for consistency
+- **Agent can only VIEW**: Numbers list with Tous/Disponibles/Distribués tabs
+
+### Files Modified
+1. `backend/apps/dashboard/templates/dashboard/phone_numbers.html`
