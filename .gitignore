@@ -110,3 +110,6 @@ coverage.xml
 *.tmp
 *.temp
 .cache/
+
+# Separate projects
+idcard_nfc/
