@@ -2,9 +2,11 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.http import FileResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Contract
 from .serializers import ContractSerializer, ContractCreateSerializer
+from .services import ContractPDFGenerator
 
 
 class ContractViewSet(viewsets.ModelViewSet):
@@ -46,6 +48,27 @@ class ContractViewSet(viewsets.ModelViewSet):
         contract.mark_email_sent()
         serializer = self.get_serializer(contract)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def pdf(self, request, pk=None):
+        """Download contract PDF. Generate if not exists."""
+        contract = self.get_object()
+
+        # Generate PDF if not exists or if regenerate is requested
+        regenerate = request.query_params.get('regenerate', 'false').lower() == 'true'
+
+        if not contract.pdf_file or regenerate:
+            generator = ContractPDFGenerator(contract)
+            generator.save_to_contract()
+            contract.refresh_from_db()
+
+        # Return PDF file
+        response = FileResponse(
+            contract.pdf_file.open('rb'),
+            content_type='application/pdf'
+        )
+        response['Content-Disposition'] = f'attachment; filename="contrat_{contract.contract_number}.pdf"'
+        return response
 
     @action(detail=False, methods=['get'])
     def stats(self, request):
