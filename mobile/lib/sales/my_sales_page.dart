@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
 import '../services/api_service.dart';
-import '../config/api_config.dart';
+import '../services/auth_service.dart';
 
 class MySalesPage extends StatefulWidget {
   const MySalesPage({super.key});
@@ -12,10 +14,12 @@ class MySalesPage extends StatefulWidget {
 
 class _MySalesPageState extends State<MySalesPage> {
   final ApiService _apiService = ApiService();
+  final AuthService _authService = AuthService();
 
   List<ContractListItem> _contracts = [];
   MyStats? _stats;
   bool _isLoading = true;
+  bool _isDownloading = false;
   String? _error;
 
   @override
@@ -494,29 +498,80 @@ class _MySalesPageState extends State<MySalesPage> {
   }
 
   Future<void> _downloadPdf(int contractId) async {
-    final pdfUrl = '${ApiConfig.baseUrl}/api/contracts/$contractId/pdf/';
+    if (_isDownloading) return;
+
+    setState(() {
+      _isDownloading = true;
+    });
+
     try {
-      final uri = Uri.parse(pdfUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
+      // Show loading indicator
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Text('Téléchargement en cours...'),
+              ],
+            ),
+            duration: Duration(seconds: 30),
+            backgroundColor: Color(0xFFED1C24),
+          ),
+        );
+      }
+
+      // Download PDF with authentication
+      final response = await _authService.authenticatedGet('/api/contracts/$contractId/pdf/');
+
+      if (response.statusCode == 200) {
+        // Save to temporary directory
+        final tempDir = await getTemporaryDirectory();
+        final file = File('${tempDir.path}/contrat_$contractId.pdf');
+        await file.writeAsBytes(response.bodyBytes);
+
+        // Hide loading snackbar
         if (mounted) {
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        }
+
+        // Open the PDF
+        final result = await OpenFilex.open(file.path);
+
+        if (result.type != ResultType.done && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Impossible d\'ouvrir le PDF'),
-              backgroundColor: Colors.red,
+            SnackBar(
+              content: Text('Impossible d\'ouvrir le PDF: ${result.message}'),
+              backgroundColor: Colors.orange,
             ),
           );
         }
+      } else {
+        throw Exception('Erreur ${response.statusCode}: ${response.reasonPhrase}');
       }
     } catch (e) {
       if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur: $e'),
             backgroundColor: Colors.red,
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDownloading = false;
+        });
       }
     }
   }

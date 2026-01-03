@@ -178,3 +178,31 @@ python-bidi>=0.4.2
 1. `backend/apps/contracts/services/pdf_generator.py` (line 314 fix)
 2. `mobile/lib/sales/my_sales_page.dart` (added PDF button + _downloadPdf method)
 3. `mobile/pubspec.yaml` (added url_launcher dependency)
+
+---
+
+## 2026-01-03: Mobile PDF Download Authentication & Backend PDF Quality
+
+### Issues Fixed
+
+#### 1. Mobile PDF Download 403 Error
+- **Problem**: Opening PDF URL in browser (url_launcher) didn't pass auth token
+- **Root Cause**: Browser doesn't have access to app's authentication token
+- **Fix**: Download PDF with authenticated API call, save to temp file, open with PDF viewer
+- **Added**: `open_filex` package for opening downloaded PDFs
+
+#### 2. Backend PDF Quality - Cramped Single Page
+- **Problem**: Backend PDF was cramped on 1 page, unlike mobile's 2-page well-formatted PDF
+- **Root Cause**: Used ReportLab's low-level `canvas.Canvas` with fixed heights
+- **Fix**: Complete rewrite using ReportLab's **Platypus** framework:
+  - `SimpleDocTemplate` for automatic page handling
+  - Flowable elements (Paragraph, Table, Spacer, Image)
+  - Content flows naturally to multiple pages when needed
+  - Added "Avantages inclus" section with bullet points
+  - Better spacing between sections
+
+### Files Modified
+1. `backend/apps/contracts/services/pdf_generator.py` (complete rewrite with Platypus)
+2. `mobile/lib/sales/my_sales_page.dart` (authenticated download + open_filex)
+3. `mobile/pubspec.yaml` (added open_filex)
+4. `mobile/android/settings.gradle.kts` (upgraded Android Gradle Plugin to 8.9.1)

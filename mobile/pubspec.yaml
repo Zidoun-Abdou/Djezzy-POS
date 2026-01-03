@@ -46,6 +46,9 @@ dependencies:
   # URL launching
   url_launcher: ^6.2.5
 
+  # Open files with external apps
+  open_filex: ^4.3.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
