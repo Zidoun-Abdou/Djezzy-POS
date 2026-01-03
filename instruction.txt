@@ -1,5 +1,17 @@
 # Djezzy POS - Change Log & Instructions
 
+## 2026-01-03: Show Available Numbers Count on Offers Page
+
+### Feature Added
+- Each offer card now displays "X numeros disponibles" (available numbers count)
+- Matches the mobile app behavior
+- Added missing `formatData` helper function
+
+### Files Modified
+1. `backend/apps/dashboard/templates/dashboard/offers.html`
+
+---
+
 ## 2026-01-03: Fix Phone Numbers Page Pagination
 
 ### Issue Fixed
