@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../services/api_service.dart';
+import '../config/api_config.dart';
 
 class MySalesPage extends StatefulWidget {
   const MySalesPage({super.key});
@@ -422,6 +424,24 @@ class _MySalesPageState extends State<MySalesPage> {
                   ? contract.offerName
                   : 'Non défini',
             ),
+            const SizedBox(height: 16),
+            // PDF Download Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _downloadPdf(contract.id),
+                icon: const Icon(Icons.picture_as_pdf, size: 18),
+                label: const Text('Télécharger PDF'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFED1C24),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -470,6 +490,34 @@ class _MySalesPageState extends State<MySalesPage> {
       return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} à ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
     } catch (e) {
       return isoDate;
+    }
+  }
+
+  Future<void> _downloadPdf(int contractId) async {
+    final pdfUrl = '${ApiConfig.baseUrl}/api/contracts/$contractId/pdf/';
+    try {
+      final uri = Uri.parse(pdfUrl);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Impossible d\'ouvrir le PDF'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 }

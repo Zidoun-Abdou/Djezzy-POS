@@ -311,7 +311,7 @@ class ContractPDFGenerator:
 
         offer_info = [
             ('Numero attribue', phone.formatted_number if phone else '-'),
-            ('Internet', f"{offer.data_amount} Go" if offer.data_amount else '-'),
+            ('Internet', f"{offer.data_allowance_mb // 1024} Go" if offer.data_allowance_mb else '-'),
             ('Validite', f"{offer.validity_days} jours" if offer.validity_days else '-'),
         ]
 

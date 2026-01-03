@@ -154,3 +154,27 @@ python-bidi>=0.4.2
 5. `backend/apps/contracts/views.py`
 6. `backend/apps/dashboard/templates/dashboard/my_sales.html`
 7. `backend/apps/dashboard/templates/dashboard/contract_detail.html`
+
+---
+
+## 2026-01-03: PDF Download Bug Fixes
+
+### Issues Fixed
+
+#### 1. Web PDF 500 Error
+- **Problem**: Downloading contract PDF via `/api/contracts/{id}/pdf/` returned 500 error
+- **Root Cause**: `pdf_generator.py` used wrong field name `offer.data_amount` instead of `offer.data_allowance_mb`
+- **Fix**: Changed line 314 to use correct field name and convert MB to GB:
+  ```python
+  ('Internet', f"{offer.data_allowance_mb // 1024} Go" if offer.data_allowance_mb else '-'),
+  ```
+
+#### 2. Mobile App Missing PDF Download
+- **Problem**: Contract cards in "Mes Ventes" page had no PDF download button
+- **Fix**: Added PDF download button to each contract card that opens the PDF in browser
+- **Added**: `url_launcher` package for opening PDF URLs
+
+### Files Modified
+1. `backend/apps/contracts/services/pdf_generator.py` (line 314 fix)
+2. `mobile/lib/sales/my_sales_page.dart` (added PDF button + _downloadPdf method)
+3. `mobile/pubspec.yaml` (added url_launcher dependency)
