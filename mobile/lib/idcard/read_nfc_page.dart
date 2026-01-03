@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:dmrtd/dmrtd.dart';
 import 'package:dmrtd/extensions.dart';
 import 'package:logging/logging.dart';
-import 'package:http/http.dart' as http;
 import 'package:camera/camera.dart';
 import '../services/id_card_service.dart';
+import '../services/datagroup_decoder.dart';
 import '../models/contract_data.dart';
 import '../contract/signature_page.dart';
 import 'user_profile_page.dart';
@@ -123,7 +123,7 @@ class _ReadNfcPageState extends State<ReadNfcPage> with SingleTickerProviderStat
         _status = '✅ Terminé. Décodage des données…';
       });
 
-      await _decodeOnServer();
+      await _decodeLocally();
 
     } catch (e, st) {
       _log.warning('Échec de la lecture: $e\n$st');
@@ -140,92 +140,74 @@ class _ReadNfcPageState extends State<ReadNfcPage> with SingleTickerProviderStat
     }
   }
 
-  Future<void> _decodeOnServer() async {
+  Future<void> _decodeLocally() async {
     if (_data == null) return;
 
     setState(() {
-      _status = '🔄 Envoi à l\'API de décodage…';
+      _status = '🔄 Décodage des données localement…';
     });
 
-    String? hexOf(dynamic dg) {
+    Uint8List? getBytes(dynamic dg) {
       try {
-        if (dg == null) return '';
-        final bytes = (dg as dynamic).toBytes() as Uint8List;
-        return bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+        if (dg == null) return null;
+        return (dg as dynamic).toBytes() as Uint8List;
       } catch (e) {
-        _log.warning('Erreur de conversion DG en hex: $e');
-        return '';
+        _log.warning('Erreur de conversion DG en bytes: $e');
+        return null;
       }
     }
 
-    final payload = {
-      'dg2': hexOf(_data!.dg2),
-      'dg7': hexOf(_data!.dg7),
-      'dg11': hexOf(_data!.dg11),
-      'dg12': hexOf(_data!.dg12),
-    };
-
     try {
-      final uri = Uri.parse('http://173.212.249.251:8005/decode');
-      final res = await http.post(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cookie': 'csrftoken=tWF3klnImdw0aqwBgxgMHdnVD3TqaXmm'
-        },
-        body: jsonEncode(payload),
+      // Decode locally using DatagroupDecoder
+      final data = DatagroupDecoder.decodeAll(
+        dg2Bytes: getBytes(_data!.dg2),
+        dg7Bytes: getBytes(_data!.dg7),
+        dg11Bytes: getBytes(_data!.dg11),
+        dg12Bytes: getBytes(_data!.dg12),
       );
 
-      if (res.statusCode >= 200 && res.statusCode < 300) {
-        final data = jsonDecode(res.body) as Map<String, dynamic>;
+      // Save NFC data to persistent storage
+      await IDCardService.saveNFCData(data);
 
-        // Save NFC data to persistent storage
-        await IDCardService.saveNFCData(data);
+      // Mark as verified (1.0 confidence for NFC verification)
+      await IDCardService.markAsVerified(1.0);
 
-        // Mark as verified (1.0 confidence for NFC verification)
-        await IDCardService.markAsVerified(1.0);
+      setState(() {
+        _decoded = data;
+        _status = '✅ Décodé avec succès!';
+      });
 
-        setState(() {
-          _decoded = data;
-          _status = '✅ Décodé avec succès!';
-        });
-
-        // Get the saved user data and navigate appropriately
-        final userData = await IDCardService.getUserData();
-        if (mounted && userData != null) {
-          // If contract flow, navigate to SignaturePage
-          if (widget.contractData != null) {
-            final updatedContractData = widget.contractData!.copyWith(
-              userData: userData,
-            );
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (_) => SignaturePage(
-                  contractData: updatedContractData,
-                  cameras: widget.cameras,
-                ),
+      // Get the saved user data and navigate appropriately
+      final userData = await IDCardService.getUserData();
+      if (mounted && userData != null) {
+        // If contract flow, navigate to SignaturePage
+        if (widget.contractData != null) {
+          final updatedContractData = widget.contractData!.copyWith(
+            userData: userData,
+          );
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => SignaturePage(
+                contractData: updatedContractData,
+                cameras: widget.cameras,
               ),
-            );
-          } else {
-            // Standard flow: navigate to UserProfilePage
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (_) => UserProfilePage(
-                  userData: userData,
-                  cameras: widget.cameras,
-                ),
+            ),
+          );
+        } else {
+          // Standard flow: navigate to UserProfilePage
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => UserProfilePage(
+                userData: userData,
+                cameras: widget.cameras,
               ),
-            );
-          }
+            ),
+          );
         }
-      } else {
-        setState(() {
-          _status = '❌ Erreur du décodeur: ${res.statusCode} ${res.reasonPhrase}';
-        });
       }
     } catch (e) {
       setState(() {
-        _status = '❌ Erreur réseau: $e';
+        _status = '❌ Erreur de décodage: $e';
       });
     }
   }
