@@ -123,9 +123,9 @@ class ContractPDFGenerator:
             leading=12,
         ))
 
-        # Bullet style
+        # Feature bullet style
         self.styles.add(ParagraphStyle(
-            name='Bullet',
+            name='FeatureBullet',
             fontName='Helvetica',
             fontSize=9,
             textColor=black,
@@ -425,7 +425,7 @@ class ContractPDFGenerator:
             features_elements.append(Spacer(1, 6))
 
             for feature in features_list:
-                bullet = Paragraph(f"<bullet>&bull;</bullet> {feature}", self.styles['Bullet'])
+                bullet = Paragraph(f"<bullet>&bull;</bullet> {feature}", self.styles['FeatureBullet'])
                 features_elements.append(bullet)
 
         # Combine all into one table cell
