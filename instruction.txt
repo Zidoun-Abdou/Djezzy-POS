@@ -1,5 +1,22 @@
 # Djezzy POS - Change Log & Instructions
 
+## 2026-01-03: Fix Phone Numbers Page Pagination
+
+### Issue Fixed
+- Numeros page showed only 20 phone numbers (pagination limit)
+- Tab counts were wrong: Tous (20), Disponibles (16), Distribues (4)
+- Should show all 74+ phone numbers
+
+### Solution
+- Added custom pagination class `PhoneNumberPagination` that allows `?page_size=all`
+- Updated phone_numbers.html to use `?page_size=all` parameter
+
+### Files Modified
+1. `backend/apps/phone_numbers/views.py` - Added PhoneNumberPagination class
+2. `backend/apps/dashboard/templates/dashboard/phone_numbers.html` - Use page_size=all
+
+---
+
 ## 2026-01-03: Fix Agent Dashboard Phone Numbers Stats Mismatch
 
 ### Issue Fixed

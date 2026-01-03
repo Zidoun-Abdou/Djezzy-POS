@@ -2,9 +2,20 @@ from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import PhoneNumber
 from .serializers import PhoneNumberSerializer
+
+
+class PhoneNumberPagination(PageNumberPagination):
+    """Custom pagination that allows fetching all results with ?page_size=all"""
+    page_size_query_param = 'page_size'
+
+    def paginate_queryset(self, queryset, request, view=None):
+        if request.query_params.get('page_size') == 'all':
+            return None
+        return super().paginate_queryset(queryset, request, view)
 
 
 class PhoneNumberViewSet(viewsets.ModelViewSet):
@@ -12,6 +23,7 @@ class PhoneNumberViewSet(viewsets.ModelViewSet):
 
     queryset = PhoneNumber.objects.all()
     serializer_class = PhoneNumberSerializer
+    pagination_class = PhoneNumberPagination
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['status']
 

@@ -198,7 +198,7 @@ function phoneNumbersManager() {
         async fetchPhones() {
             this.loading = true;
             try {
-                const data = await api.get('/phone-numbers/');
+                const data = await api.get('/phone-numbers/?page_size=all');
                 this.phones = data.results || data;
                 this.filterPhones();
             } catch (error) {
