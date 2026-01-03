@@ -2,6 +2,8 @@
 
 Point of Sale system for Djezzy mobile operator - managing telecom offers, phone number assignments, and customer contracts.
 
+**Production URL:** http://194.163.133.249
+
 ## Project Structure
 
 ```
