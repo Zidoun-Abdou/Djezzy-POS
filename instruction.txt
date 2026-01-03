@@ -71,3 +71,38 @@
 
 ### Files Modified
 1. `backend/apps/dashboard/templates/dashboard/phone_numbers.html`
+
+---
+
+## 2026-01-03: Replace NFC Decode API with Local Dart Decoder (Mobile App)
+
+### Issue Fixed
+- Mobile app was calling external API (`http://173.212.249.251:8005/decode`) to decode NFC datagroups
+- This required network connection and had latency issues
+
+### Changes Made
+
+#### 1. Added DatagroupDecoder Class
+- **New File**: `mobile/lib/services/datagroup_decoder.dart`
+- Copied from `idcard_nfc` project with same decoding logic
+- Provides offline decoding for all ID card NFC datagroups:
+  - **DG2**: Face photo extraction (JPEG/JP2 image markers)
+  - **DG7**: Signature image extraction
+  - **DG11**: Personal data (names, birth date/place, NIN, blood type) with ISO-8859-6 Arabic encoding
+  - **DG12**: Document data (daira, baladia, issue/expiry dates)
+
+#### 2. Updated read_nfc_page.dart
+- Replaced `_decodeOnServer()` with `_decodeLocally()`
+- Removed `http` package import (no longer needed)
+- Uses `DatagroupDecoder.decodeAll()` for local decoding
+- Same data format as before - no changes to downstream code
+
+### Benefits
+- **Offline Support**: App now works without network for NFC decoding
+- **Faster**: No network latency, instant decoding
+- **More Reliable**: No external server dependency
+- **Consistent**: Same decoding logic as `idcard_nfc` project
+
+### Files Modified
+1. `mobile/lib/services/datagroup_decoder.dart` (NEW)
+2. `mobile/lib/idcard/read_nfc_page.dart`
