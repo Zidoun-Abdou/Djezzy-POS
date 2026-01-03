@@ -1,5 +1,23 @@
 # Djezzy POS - Change Log & Instructions
 
+## 2026-01-03: README Documentation Update
+
+### Changes Made
+- Updated README.md with comprehensive project documentation:
+  - Role-based access control (Admin vs Agent Commercial)
+  - PDF generation and download features
+  - NFC local decoding capabilities (DG2, DG7, DG11, DG12)
+  - Web dashboard features for both user types
+  - New API endpoints (`/api/contracts/{id}/pdf/`, `/api/contracts/my-stats/`)
+  - Full tech stack with new dependencies
+  - User roles and permissions documentation
+
+### Files Modified
+1. `README.md` (comprehensive update)
+2. `.gitignore` (added idcard_nfc/ - separate project)
+
+---
+
 ## 2026-01-03: Role-Based Access Control for Agent Commercial
 
 ### Issue Fixed
