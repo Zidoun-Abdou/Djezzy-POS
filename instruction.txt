@@ -106,3 +106,51 @@
 ### Files Modified
 1. `mobile/lib/services/datagroup_decoder.dart` (NEW)
 2. `mobile/lib/idcard/read_nfc_page.dart`
+
+---
+
+## 2026-01-03: PDF Download for Agent Contract History
+
+### Feature Added
+- Agents can now download PDF contracts from their sales history (web dashboard and mobile)
+- PDFs are generated on-demand if not already stored
+
+### Changes Made
+
+#### 1. Backend PDF Generator Service
+- **New File**: `backend/apps/contracts/services/pdf_generator.py`
+- Uses ReportLab library for PDF generation
+- Matches mobile app's PDF design:
+  - Header with Djezzy logo and contract number
+  - Client info section with photo
+  - Offer details section
+  - Terms and conditions
+  - Signature section
+- Arabic text support via `arabic-reshaper` and `python-bidi`
+- Arabic font: `Amiri-Regular.ttf` copied to `backend/static/fonts/`
+
+#### 2. New API Endpoint
+- **Endpoint**: `GET /api/contracts/{id}/pdf/`
+- Generates PDF on-demand if not stored
+- Optional `?regenerate=true` parameter to force regeneration
+- Returns PDF file for download
+
+#### 3. Updated Templates
+- **my_sales.html**: Added PDF download button next to view button for each contract
+- **contract_detail.html**: PDF download now always visible (not conditional)
+
+### Dependencies Added (requirements.txt)
+```
+reportlab>=4.0.0
+arabic-reshaper>=3.0.0
+python-bidi>=0.4.2
+```
+
+### Files Modified
+1. `backend/requirements.txt`
+2. `backend/static/fonts/Amiri-Regular.ttf` (NEW)
+3. `backend/apps/contracts/services/__init__.py` (NEW)
+4. `backend/apps/contracts/services/pdf_generator.py` (NEW)
+5. `backend/apps/contracts/views.py`
+6. `backend/apps/dashboard/templates/dashboard/my_sales.html`
+7. `backend/apps/dashboard/templates/dashboard/contract_detail.html`
