@@ -412,10 +412,9 @@ function agentDashboard() {
         async init() {
             this.loading = true;
             try {
-                const [myStats, offers, phones] = await Promise.all([
+                const [myStats, offers] = await Promise.all([
                     api.get('/contracts/my-stats/'),
-                    api.get('/offers/'),
-                    api.get('/phone-numbers/')
+                    api.get('/offers/active/')
                 ]);
 
                 // My stats
@@ -426,16 +425,15 @@ function agentDashboard() {
                 this.stats.by_offer = myStats.by_offer || [];
                 this.stats.daily_sales = myStats.daily_sales || [];
 
-                // Offers
+                // Offers (all returned offers are active)
                 const offerList = offers.results || offers;
                 this.offersStats.total = offerList.length;
-                this.offersStats.active = offerList.filter(o => o.is_active).length;
+                this.offersStats.active = offerList.length;
 
-                // Phones - only available and distributed
-                const phoneList = phones.results || phones;
-                this.phonesStats.total = phoneList.length;
-                this.phonesStats.available = phoneList.filter(p => p.status === 'available').length;
-                this.phonesStats.distributed = phoneList.filter(p => p.status === 'assigned').length;
+                // Phones - sum counts from all active offers
+                this.phonesStats.available = offerList.reduce((sum, o) => sum + (o.available_count || 0), 0);
+                this.phonesStats.distributed = offerList.reduce((sum, o) => sum + (o.distributed_count || 0), 0);
+                this.phonesStats.total = this.phonesStats.available + this.phonesStats.distributed;
 
                 this.loading = false;
 

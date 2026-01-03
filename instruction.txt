@@ -1,5 +1,26 @@
 # Djezzy POS - Change Log & Instructions
 
+## 2026-01-03: Fix Agent Dashboard Phone Numbers Stats Mismatch
+
+### Issue Fixed
+- Agent dashboard web showed wrong phone numbers count (20 total, 16 available)
+- Mobile app showed correct counts per offer (18 + 16 + 40 = 74 available)
+
+### Root Cause
+- Django REST Framework pagination (`PAGE_SIZE = 20`) caused `/api/phone-numbers/` to return only first 20 numbers
+- Agent dashboard was counting from that paginated result instead of all numbers
+
+### Solution
+- Changed agent dashboard to use `/api/offers/active/` endpoint (same as mobile app)
+- Sum `available_count` and `distributed_count` from all active offers
+- Added `distributed_count` field to OfferSerializer
+
+### Files Modified
+1. `backend/apps/offers/serializers.py` - Added `distributed_count` SerializerMethodField
+2. `backend/apps/dashboard/templates/dashboard/index.html` - Changed API call and stats calculation
+
+---
+
 ## 2026-01-03: README Documentation Update
 
 ### Changes Made

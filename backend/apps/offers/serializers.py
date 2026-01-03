@@ -9,6 +9,7 @@ class OfferSerializer(serializers.ModelSerializer):
     formatted_price = serializers.ReadOnlyField()
     available_phone_numbers = serializers.SerializerMethodField()
     available_count = serializers.SerializerMethodField()
+    distributed_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Offer
@@ -17,7 +18,7 @@ class OfferSerializer(serializers.ModelSerializer):
             'data_allowance_mb', 'data_allowance_gb', 'voice_minutes',
             'sms_count', 'validity_days', 'features', 'is_active',
             'display_order', 'formatted_price',
-            'available_phone_numbers', 'available_count',
+            'available_phone_numbers', 'available_count', 'distributed_count',
             'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
@@ -37,3 +38,7 @@ class OfferSerializer(serializers.ModelSerializer):
     def get_available_count(self, obj):
         """Return count of available phone numbers."""
         return obj.phone_numbers.filter(status='available').count()
+
+    def get_distributed_count(self, obj):
+        """Return count of distributed/assigned phone numbers."""
+        return obj.phone_numbers.filter(status='assigned').count()
