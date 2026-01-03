@@ -105,6 +105,14 @@ class ContractPDFGenerator:
             textColor=black,
         ))
 
+        # Arabic info value style (uses Amiri font for Arabic text)
+        self.styles.add(ParagraphStyle(
+            name='InfoValueArabic',
+            fontName=self.arabic_font,
+            fontSize=9,
+            textColor=black,
+        ))
+
         # Offer title style
         self.styles.add(ParagraphStyle(
             name='OfferTitle',
@@ -302,9 +310,9 @@ class ContractPDFGenerator:
         info_rows.append(self._info_row('Prenom', self.contract.customer_first_name or '-'))
 
         if self.contract.customer_last_name_ar:
-            info_rows.append(self._info_row('Nom (Arabe)', self._reshape_arabic(self.contract.customer_last_name_ar)))
+            info_rows.append(self._info_row('Nom (Arabe)', self._reshape_arabic(self.contract.customer_last_name_ar), is_arabic=True))
         if self.contract.customer_first_name_ar:
-            info_rows.append(self._info_row('Prenom (Arabe)', self._reshape_arabic(self.contract.customer_first_name_ar)))
+            info_rows.append(self._info_row('Prenom (Arabe)', self._reshape_arabic(self.contract.customer_first_name_ar), is_arabic=True))
 
         # Divider
         info_rows.append([HRFlowable(width='100%', thickness=0.5, color=HexColor('#EEEEEE'))])
@@ -359,10 +367,11 @@ class ContractPDFGenerator:
 
         return main_table
 
-    def _info_row(self, label, value):
+    def _info_row(self, label, value, is_arabic=False):
         """Create an info row with label and value."""
         label_para = Paragraph(label, self.styles['InfoLabel'])
-        value_para = Paragraph(str(value), self.styles['InfoValue'])
+        style = self.styles['InfoValueArabic'] if is_arabic else self.styles['InfoValue']
+        value_para = Paragraph(str(value), style)
         return [label_para, value_para]
 
     def _build_offer_section(self):
@@ -479,11 +488,11 @@ class ContractPDFGenerator:
 
     def _build_signature_section(self):
         """Build signature section."""
-        # Signature image
+        # Signature image - larger size to preserve original display
         sig_io = self._load_signature()
         if sig_io:
             try:
-                sig_img = RLImage(sig_io, width=150, height=50)
+                sig_img = RLImage(sig_io, width=200, height=80)
             except:
                 sig_img = Paragraph('[Signature]', ParagraphStyle('SigPlaceholder',
                     fontName='Helvetica', fontSize=9, textColor=self.TEXT_GRAY, alignment=TA_CENTER))
@@ -491,8 +500,8 @@ class ContractPDFGenerator:
             sig_img = Paragraph('[Signature]', ParagraphStyle('SigPlaceholder',
                 fontName='Helvetica', fontSize=9, textColor=self.TEXT_GRAY, alignment=TA_CENTER))
 
-        # Signature box
-        sig_table = Table([[sig_img]], colWidths=[160])
+        # Signature box - wider to accommodate larger signature
+        sig_table = Table([[sig_img]], colWidths=[210])
         sig_table.setStyle(TableStyle([
             ('BOX', (0, 0), (-1, -1), 1, self.BORDER_GRAY),
             ('BACKGROUND', (0, 0), (-1, -1), white),
@@ -533,9 +542,9 @@ class ContractPDFGenerator:
         title_para = Paragraph('<b>SIGNATURE DU CLIENT</b>', ParagraphStyle(
             'SigTitle', fontName='Helvetica-Bold', fontSize=12, textColor=black))
 
-        # Main layout
+        # Main layout - adjusted widths for larger signature
         main_data = [[sig_table, info_elements]]
-        main_table = Table(main_data, colWidths=[180, 300])
+        main_table = Table(main_data, colWidths=[220, 260])
         main_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
