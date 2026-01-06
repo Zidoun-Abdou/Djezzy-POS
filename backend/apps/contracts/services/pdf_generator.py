@@ -211,6 +211,12 @@ class ContractPDFGenerator:
         elements.append(self._build_section_title('INFORMATIONS CLIENT'))
         elements.append(Spacer(1, 10))
         elements.append(self._build_client_info())
+        elements.append(Spacer(1, 15))
+
+        # Contact Information Section
+        elements.append(self._build_section_title('COORDONNEES'))
+        elements.append(Spacer(1, 10))
+        elements.append(self._build_contact_section())
         elements.append(Spacer(1, 25))
 
         # Offer Section
@@ -373,6 +379,35 @@ class ContractPDFGenerator:
         style = self.styles['InfoValueArabic'] if is_arabic else self.styles['InfoValue']
         value_para = Paragraph(str(value), style)
         return [label_para, value_para]
+
+    def _build_contact_section(self):
+        """Build contact information section (phone, email, address)."""
+        # Build info rows
+        info_rows = []
+        info_rows.append(self._info_row('Telephone', self.contract.customer_phone or '-'))
+        info_rows.append(self._info_row('Email', self.contract.customer_email or '-'))
+        info_rows.append(self._info_row('Adresse', self.contract.customer_address or '-'))
+
+        # Info table
+        info_table = Table(info_rows, colWidths=[120, 380])
+        info_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+
+        # Wrapper with border
+        wrapper_table = Table([[info_table]], colWidths=[500])
+        wrapper_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 1, self.BORDER_GRAY),
+            ('LEFTPADDING', (0, 0), (-1, -1), 12),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            ('TOPPADDING', (0, 0), (-1, -1), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('ROUNDEDCORNERS', [8, 8, 8, 8]),
+        ]))
+
+        return wrapper_table
 
     def _build_offer_section(self):
         """Build offer details section with features."""
