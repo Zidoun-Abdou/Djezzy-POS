@@ -57,10 +57,20 @@ class Contract(models.Model):
         blank=True,
         verbose_name='Lieu de naissance'
     )
+    customer_birth_place_ar = models.CharField(
+        max_length=200,
+        blank=True,
+        verbose_name='Lieu de naissance (Arabe)'
+    )
     customer_sex = models.CharField(
         max_length=10,
         blank=True,
         verbose_name='Sexe'
+    )
+    customer_blood_type = models.CharField(
+        max_length=10,
+        blank=True,
+        verbose_name='Groupe sanguin'
     )
     customer_nin = models.CharField(
         max_length=50,

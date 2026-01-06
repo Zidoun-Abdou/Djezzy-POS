@@ -327,7 +327,11 @@ class ContractPDFGenerator:
         birth_date = self.contract.customer_birth_date.strftime('%d/%m/%Y') if self.contract.customer_birth_date else '-'
         info_rows.append(self._info_row('Date de naissance', birth_date))
         info_rows.append(self._info_row('Lieu de naissance', self.contract.customer_birth_place or '-'))
+        if self.contract.customer_birth_place_ar:
+            info_rows.append(self._info_row('Lieu (Arabe)', self._reshape_arabic(self.contract.customer_birth_place_ar), is_arabic=True))
         info_rows.append(self._info_row('Sexe', self.contract.customer_sex or '-'))
+        if self.contract.customer_blood_type:
+            info_rows.append(self._info_row('Groupe sanguin', self.contract.customer_blood_type))
 
         # Divider
         info_rows.append([HRFlowable(width='100%', thickness=0.5, color=HexColor('#EEEEEE'))])

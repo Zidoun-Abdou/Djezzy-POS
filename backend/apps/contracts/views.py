@@ -51,16 +51,13 @@ class ContractViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def pdf(self, request, pk=None):
-        """Download contract PDF. Generate if not exists."""
+        """Download contract PDF. Always regenerate to ensure latest data."""
         contract = self.get_object()
 
-        # Generate PDF if not exists or if regenerate is requested
-        regenerate = request.query_params.get('regenerate', 'false').lower() == 'true'
-
-        if not contract.pdf_file or regenerate:
-            generator = ContractPDFGenerator(contract)
-            generator.save_to_contract()
-            contract.refresh_from_db()
+        # Always regenerate PDF to ensure it has the latest contract data
+        generator = ContractPDFGenerator(contract)
+        generator.save_to_contract()
+        contract.refresh_from_db()
 
         # Return PDF file
         response = FileResponse(
