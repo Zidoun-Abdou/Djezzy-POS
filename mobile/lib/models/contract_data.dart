@@ -9,6 +9,10 @@ class ContractData {
   final Uint8List? signatureImage;
   final DateTime contractDate;
   final String contractId;
+  // Contact info fields
+  final String? customerPhone;
+  final String? customerEmail;
+  final String? customerAddress;
 
   ContractData({
     required this.selectedOffer,
@@ -17,6 +21,9 @@ class ContractData {
     this.signatureImage,
     DateTime? contractDate,
     String? contractId,
+    this.customerPhone,
+    this.customerEmail,
+    this.customerAddress,
   })  : contractDate = contractDate ?? DateTime.now(),
         contractId = contractId ?? _generateContractId();
 
@@ -36,6 +43,9 @@ class ContractData {
     Uint8List? signatureImage,
     DateTime? contractDate,
     String? contractId,
+    String? customerPhone,
+    String? customerEmail,
+    String? customerAddress,
   }) {
     return ContractData(
       selectedOffer: selectedOffer ?? this.selectedOffer,
@@ -44,6 +54,9 @@ class ContractData {
       signatureImage: signatureImage ?? this.signatureImage,
       contractDate: contractDate ?? this.contractDate,
       contractId: contractId ?? this.contractId,
+      customerPhone: customerPhone ?? this.customerPhone,
+      customerEmail: customerEmail ?? this.customerEmail,
+      customerAddress: customerAddress ?? this.customerAddress,
     );
   }
 

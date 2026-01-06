@@ -30,7 +30,8 @@ class ContractSerializer(serializers.ModelSerializer):
             # Files
             'pdf_file', 'customer_photo', 'signature_base64',
             # Contact
-            'customer_email', 'email_sent', 'email_sent_at',
+            'customer_phone', 'customer_email', 'customer_address',
+            'email_sent', 'email_sent_at',
             # Metadata
             'created_by', 'agent_name', 'created_at', 'updated_at', 'signed_at'
         ]
@@ -63,7 +64,8 @@ class ContractCreateSerializer(serializers.ModelSerializer):
             'customer_birth_date', 'customer_birth_place',
             'customer_sex', 'customer_nin', 'customer_id_number',
             'customer_id_expiry', 'customer_daira', 'customer_baladia',
-            'offer', 'phone_number', 'customer_email',
+            'offer', 'phone_number',
+            'customer_phone', 'customer_email', 'customer_address',
             'signature_base64', 'customer_photo_base64', 'pdf_file'
         ]
 

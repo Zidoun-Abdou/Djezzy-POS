@@ -64,6 +64,12 @@ class PDFGeneratorService {
             _buildSectionTitle('INFORMATIONS CLIENT'),
             pw.SizedBox(height: 10),
             _buildClientInfoWithPhoto(personal, document, faceImage, arabicFont),
+            pw.SizedBox(height: 15),
+
+            // Contact Information Section
+            _buildSectionTitle('COORDONNEES'),
+            pw.SizedBox(height: 10),
+            _buildContactInfoSection(contractData),
             pw.SizedBox(height: 25),
 
             // Offer Details Section
@@ -304,6 +310,23 @@ class PDFGeneratorService {
               textDirection: pw.TextDirection.rtl,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  static pw.Widget _buildContactInfoSection(ContractData contractData) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(12),
+      decoration: pw.BoxDecoration(
+        border: pw.Border.all(color: PdfColor.fromHex('#CCCCCC')),
+        borderRadius: pw.BorderRadius.circular(8),
+      ),
+      child: pw.Column(
+        children: [
+          _buildInfoRow('Telephone', contractData.customerPhone ?? '-'),
+          _buildInfoRow('Email', contractData.customerEmail ?? '-'),
+          _buildInfoRow('Adresse', contractData.customerAddress ?? '-'),
         ],
       ),
     );

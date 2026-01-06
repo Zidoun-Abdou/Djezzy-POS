@@ -114,6 +114,9 @@ class ApiService {
     required Map<String, dynamic> customerData,
     String? signatureBase64,
     String? photoBase64,
+    String? customerPhone,
+    String? customerEmail,
+    String? customerAddress,
   }) async {
     try {
       final personal = customerData['personal'] as Map<String, dynamic>? ?? {};
@@ -136,6 +139,9 @@ class ApiService {
         'customer_baladia': document['baladia'] ?? '',
         if (signatureBase64 != null) 'signature_base64': signatureBase64,
         if (photoBase64 != null) 'customer_photo_base64': photoBase64,
+        if (customerPhone != null && customerPhone.isNotEmpty) 'customer_phone': customerPhone,
+        if (customerEmail != null && customerEmail.isNotEmpty) 'customer_email': customerEmail,
+        if (customerAddress != null && customerAddress.isNotEmpty) 'customer_address': customerAddress,
       };
 
       print('Contract API Request: $body');

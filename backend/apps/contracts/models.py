@@ -120,9 +120,18 @@ class Contract(models.Model):
     )
 
     # Contact
+    customer_phone = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name='Telephone du client'
+    )
     customer_email = models.EmailField(
         blank=True,
         verbose_name='Email du client'
+    )
+    customer_address = models.TextField(
+        blank=True,
+        verbose_name='Adresse du client'
     )
     email_sent = models.BooleanField(
         default=False,
