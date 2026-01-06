@@ -274,3 +274,44 @@ python-bidi>=0.4.2
 2. `mobile/lib/sales/my_sales_page.dart` (authenticated download + open_filex)
 3. `mobile/pubspec.yaml` (added open_filex)
 4. `mobile/android/settings.gradle.kts` (upgraded Android Gradle Plugin to 8.9.1)
+
+---
+
+## 2026-01-07: Sync Backend PDF with Mobile App PDF
+
+### Issue Fixed
+- PDF downloaded from history (mobile app or web dashboard) didn't match the PDF shown in mobile app after signing
+- Missing fields: Arabic birth place, Blood type, Phone, Email, Address
+
+### Root Causes
+1. **Missing fields in backend model**: `customer_birth_place_ar` and `customer_blood_type` were collected from ID card but not stored in database
+2. **PDF caching**: Backend was caching PDFs and not regenerating them when contract data was updated
+
+### Changes Made
+
+#### 1. Added Missing Fields to Contract Model
+- `customer_birth_place_ar` (CharField, max_length=200, blank=True)
+- `customer_blood_type` (CharField, max_length=10, blank=True)
+
+#### 2. Updated Serializers
+- Added `customer_birth_place_ar` and `customer_blood_type` to both `ContractSerializer` and `ContractCreateSerializer`
+
+#### 3. Updated Mobile API Service
+- Now sends `customer_birth_place_ar` from `personal['birthPlaceAr']`
+- Now sends `customer_blood_type` from `personal['bloodType']`
+
+#### 4. Updated Backend PDF Generator
+- Added `Lieu (Arabe)` field after birth place (with Arabic font support)
+- Added `Groupe sanguin` field after sex
+
+#### 5. Fixed PDF Caching
+- Changed PDF download endpoint to ALWAYS regenerate PDF
+- Ensures downloaded PDF always has latest contract data
+
+### Files Modified
+1. `backend/apps/contracts/models.py` - Added 2 new fields
+2. `backend/apps/contracts/migrations/0004_contract_customer_birth_place_ar_and_more.py` - New migration
+3. `backend/apps/contracts/serializers.py` - Added fields to serializers
+4. `backend/apps/contracts/services/pdf_generator.py` - Added Arabic birth place + blood type rows
+5. `backend/apps/contracts/views.py` - Always regenerate PDF on download
+6. `mobile/lib/services/api_service.dart` - Send new fields to backend
