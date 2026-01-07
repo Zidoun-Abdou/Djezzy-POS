@@ -85,7 +85,7 @@ class _ContactInfoPageState extends State<ContactInfoPage>
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -282,7 +282,7 @@ class _ContactInfoPageState extends State<ContactInfoPage>
                   ),
                 ),
 
-                const Spacer(),
+                const SizedBox(height: 32),
 
                 // Continue Button
                 Container(
