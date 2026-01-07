@@ -405,3 +405,42 @@ def save(self, *args, **kwargs):
 1. `mobile/lib/services/api_service.dart`
 2. `mobile/lib/contract/contract_preview_page.dart`
 3. `backend/apps/contracts/serializers.py`
+
+---
+
+## 2026-01-07: Separate Contact Info from Signature Screen
+
+### Change Summary
+Split the signature screen into two separate screens:
+1. **ContactInfoPage** - for entering phone, email, and address
+2. **SignaturePage** - for signature only
+
+### New Flow
+```
+MRZ Scan -> Contact Info Page -> Signature Page -> Contract Preview
+```
+
+### Changes Made
+
+#### 1. New File: `mobile/lib/contract/contact_info_page.dart`
+- User info summary header (photo, name, CNI, NIN)
+- Phone field (TextInputType.phone)
+- Email field (TextInputType.emailAddress)
+- Address field (TextInputType.streetAddress, multiline)
+- "Suivant" button to navigate to SignaturePage
+- Contact fields remain optional
+
+#### 2. Modified: `mobile/lib/contract/signature_page.dart`
+- Removed contact info section (phone, email, address fields)
+- Removed contact form controllers
+- Now receives contact info already in ContractData from ContactInfoPage
+- Kept: User info header, signature canvas, confirmation checkbox, submit button
+
+#### 3. Modified: `mobile/lib/idcard/read_nfc_page.dart`
+- Changed navigation target from SignaturePage to ContactInfoPage
+- Updated import statement
+
+### Files Modified
+1. `mobile/lib/contract/contact_info_page.dart` (NEW)
+2. `mobile/lib/contract/signature_page.dart`
+3. `mobile/lib/idcard/read_nfc_page.dart`
