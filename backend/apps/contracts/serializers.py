@@ -65,6 +65,7 @@ class ContractCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contract
         fields = [
+            'contract_number',
             'customer_first_name', 'customer_last_name',
             'customer_first_name_ar', 'customer_last_name_ar',
             'customer_birth_date', 'customer_birth_place',

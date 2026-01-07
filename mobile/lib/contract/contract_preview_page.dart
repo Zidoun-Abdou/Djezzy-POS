@@ -116,6 +116,7 @@ class _ContractPreviewPageState extends State<ContractPreviewPage>
         customerEmail: widget.contractData.customerEmail,
         customerAddress: widget.contractData.customerAddress,
         pdfBase64: pdfBase64,
+        contractId: widget.contractData.contractId,
       );
 
       if (mounted) {
