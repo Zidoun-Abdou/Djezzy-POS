@@ -363,3 +363,45 @@ python-bidi>=0.4.2
 3. `backend/apps/contracts/views.py` - Added public_contract_pdf view
 4. `backend/apps/contracts/services/pdf_generator.py` - Added QR code generation
 5. `mobile/lib/services/pdf_generator_service.dart` - Added QR code to PDF
+
+---
+
+## 2026-01-07: Single PDF Generator + QR Code Contract ID Fix
+
+### Architecture Change: Single PDF Generator
+- **Before:** Two PDF generators - mobile and backend generated different PDFs
+- **After:** Only mobile generates PDF, sends it to backend for storage
+- Backend now saves mobile-generated PDF instead of regenerating
+- Ensures 100% consistency between preview and download
+
+### QR Code 404 Bug Fix
+- **Problem:** QR code returned 404 "No Contract matches the given query"
+- **Root Cause:** Mobile generated contract ID (e.g., `DJ-20260107-687953`) used in QR URL, but backend generated a DIFFERENT contract number when saving
+- **Fix:** Mobile now sends its contract ID to backend, backend uses it instead of generating new one
+
+### Changes Made
+
+#### 1. Mobile API Service (api_service.dart)
+- Added `contractId` parameter to `submitContract()` method
+- Sends `contract_number` in request body
+
+#### 2. Contract Preview Page (contract_preview_page.dart)
+- Passes `widget.contractData.contractId` to API call
+
+#### 3. Backend Serializer (serializers.py)
+- Added `contract_number` to fields list
+- Uses client-provided value instead of auto-generating
+
+#### 4. Backend Model (models.py)
+- `save()` already had correct logic: only generates if no contract_number provided
+```python
+def save(self, *args, **kwargs):
+    if not self.contract_number:
+        self.contract_number = self.generate_contract_number()
+    super().save(*args, **kwargs)
+```
+
+### Files Modified
+1. `mobile/lib/services/api_service.dart`
+2. `mobile/lib/contract/contract_preview_page.dart`
+3. `backend/apps/contracts/serializers.py`
