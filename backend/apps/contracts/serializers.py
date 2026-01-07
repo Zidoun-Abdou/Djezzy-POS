@@ -57,6 +57,11 @@ class ContractCreateSerializer(serializers.ModelSerializer):
         write_only=True, required=False, allow_blank=True, allow_null=True
     )
 
+    # Accept base64 PDF data from mobile app
+    pdf_base64 = serializers.CharField(
+        write_only=True, required=False, allow_blank=True, allow_null=True
+    )
+
     class Meta:
         model = Contract
         fields = [
@@ -68,7 +73,7 @@ class ContractCreateSerializer(serializers.ModelSerializer):
             'customer_id_expiry', 'customer_daira', 'customer_baladia',
             'offer', 'phone_number',
             'customer_phone', 'customer_email', 'customer_address',
-            'signature_base64', 'customer_photo_base64', 'pdf_file'
+            'signature_base64', 'customer_photo_base64', 'pdf_base64'
         ]
 
     def create(self, validated_data):
@@ -85,6 +90,9 @@ class ContractCreateSerializer(serializers.ModelSerializer):
             except Exception:
                 pass  # Ignore invalid base64
 
+        # Handle base64 PDF - convert to file
+        pdf_base64 = validated_data.pop('pdf_base64', None)
+
         # Set created_by from authenticated user
         request = self.context.get('request')
         if request and request.user.is_authenticated:
@@ -97,4 +105,19 @@ class ContractCreateSerializer(serializers.ModelSerializer):
             nin = validated_data.get('customer_nin', '')
             phone_number.assign_to(name, nin)
 
-        return super().create(validated_data)
+        # Create contract first to get contract_number
+        contract = super().create(validated_data)
+
+        # Save PDF file after contract is created (need contract_number for filename)
+        if pdf_base64:
+            try:
+                pdf_data = base64.b64decode(pdf_base64)
+                contract.pdf_file.save(
+                    f"contrat_{contract.contract_number}.pdf",
+                    ContentFile(pdf_data),
+                    save=True
+                )
+            except Exception:
+                pass  # Ignore invalid base64
+
+        return contract

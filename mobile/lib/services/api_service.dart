@@ -117,6 +117,7 @@ class ApiService {
     String? customerPhone,
     String? customerEmail,
     String? customerAddress,
+    String? pdfBase64,
   }) async {
     try {
       final personal = customerData['personal'] as Map<String, dynamic>? ?? {};
@@ -144,6 +145,7 @@ class ApiService {
         if (customerPhone != null && customerPhone.isNotEmpty) 'customer_phone': customerPhone,
         if (customerEmail != null && customerEmail.isNotEmpty) 'customer_email': customerEmail,
         if (customerAddress != null && customerAddress.isNotEmpty) 'customer_address': customerAddress,
+        if (pdfBase64 != null) 'pdf_base64': pdfBase64,
       };
 
       print('Contract API Request: $body');

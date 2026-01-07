@@ -100,6 +100,12 @@ class _ContractPreviewPageState extends State<ContractPreviewPage>
       // Get face image (already base64 from NFC)
       final photoBase64 = widget.contractData.faceImageBase64;
 
+      // Get PDF as base64
+      String? pdfBase64;
+      if (_pdfBytes != null) {
+        pdfBase64 = base64Encode(_pdfBytes!);
+      }
+
       final result = await _apiService.submitContract(
         offerId: widget.contractData.selectedOffer.id,
         phoneNumberId: widget.contractData.selectedPhoneNumber.id,
@@ -109,6 +115,7 @@ class _ContractPreviewPageState extends State<ContractPreviewPage>
         customerPhone: widget.contractData.customerPhone,
         customerEmail: widget.contractData.customerEmail,
         customerAddress: widget.contractData.customerAddress,
+        pdfBase64: pdfBase64,
       );
 
       if (mounted) {

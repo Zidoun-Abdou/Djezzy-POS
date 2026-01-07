@@ -467,8 +467,8 @@ class PDFGeneratorService {
   }
 
   static pw.Widget _buildSignatureSection(ContractData contractData) {
-    // Generate QR code URL
-    final qrUrl = '${ApiConfig.baseUrl}/contracts/public/${contractData.contractId}/pdf/';
+    // Generate QR code URL for public PDF download
+    final qrUrl = '${ApiConfig.baseUrl}/api/contracts/public/${contractData.contractId}/pdf/';
 
     return pw.Container(
       padding: const pw.EdgeInsets.all(16),
