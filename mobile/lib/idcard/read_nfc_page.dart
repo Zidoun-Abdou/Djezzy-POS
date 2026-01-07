@@ -8,7 +8,7 @@ import 'package:camera/camera.dart';
 import '../services/id_card_service.dart';
 import '../services/datagroup_decoder.dart';
 import '../models/contract_data.dart';
-import '../contract/signature_page.dart';
+import '../contract/contact_info_page.dart';
 import 'user_profile_page.dart';
 
 class MrtdData {
@@ -180,14 +180,14 @@ class _ReadNfcPageState extends State<ReadNfcPage> with SingleTickerProviderStat
       // Get the saved user data and navigate appropriately
       final userData = await IDCardService.getUserData();
       if (mounted && userData != null) {
-        // If contract flow, navigate to SignaturePage
+        // If contract flow, navigate to ContactInfoPage
         if (widget.contractData != null) {
           final updatedContractData = widget.contractData!.copyWith(
             userData: userData,
           );
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (_) => SignaturePage(
+              builder: (_) => ContactInfoPage(
                 contractData: updatedContractData,
                 cameras: widget.cameras,
               ),

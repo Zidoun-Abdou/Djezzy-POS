@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:signature/signature.dart';
@@ -25,11 +24,6 @@ class _SignaturePageState extends State<SignaturePage>
   late SignatureController _signatureController;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
-
-  // Contact form controllers
-  final _phoneController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _addressController = TextEditingController();
 
   bool _isConfirmed = false;
   bool _hasSigned = false;
@@ -66,9 +60,6 @@ class _SignaturePageState extends State<SignaturePage>
   void dispose() {
     _signatureController.dispose();
     _fadeController.dispose();
-    _phoneController.dispose();
-    _emailController.dispose();
-    _addressController.dispose();
     super.dispose();
   }
 
@@ -90,9 +81,6 @@ class _SignaturePageState extends State<SignaturePage>
     if (signatureBytes != null) {
       final updatedContractData = widget.contractData.copyWith(
         signatureImage: signatureBytes,
-        customerPhone: _phoneController.text.trim(),
-        customerEmail: _emailController.text.trim(),
-        customerAddress: _addressController.text.trim(),
       );
 
       if (mounted) {
@@ -212,99 +200,7 @@ class _SignaturePageState extends State<SignaturePage>
                   ),
                 ),
 
-                const SizedBox(height: 16),
-
-                // Contact Info Section
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F5F5),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: const Color(0xFFED1C24).withOpacity(0.2),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.contact_phone,
-                            color: Color(0xFFED1C24),
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Coordonnées du client',
-                            style: TextStyle(
-                              color: Colors.black.withOpacity(0.8),
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      // Phone field
-                      TextField(
-                        controller: _phoneController,
-                        keyboardType: TextInputType.phone,
-                        decoration: InputDecoration(
-                          labelText: 'Téléphone',
-                          prefixIcon: const Icon(Icons.phone, size: 20),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFFED1C24)),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // Email field
-                      TextField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          prefixIcon: const Icon(Icons.email, size: 20),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFFED1C24)),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // Address field
-                      TextField(
-                        controller: _addressController,
-                        keyboardType: TextInputType.streetAddress,
-                        maxLines: 2,
-                        decoration: InputDecoration(
-                          labelText: 'Adresse',
-                          prefixIcon: const Icon(Icons.location_on, size: 20),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: Color(0xFFED1C24)),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
                 // Signature Section Title
                 Row(
