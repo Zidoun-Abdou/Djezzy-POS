@@ -24,6 +24,12 @@ from reportlab.pdfbase.ttfonts import TTFont
 from PIL import Image as PILImage
 
 try:
+    import qrcode
+    QR_SUPPORT = True
+except ImportError:
+    QR_SUPPORT = False
+
+try:
     import arabic_reshaper
     from bidi.algorithm import get_display
     ARABIC_SUPPORT = True
@@ -185,6 +191,37 @@ class ContractPDFGenerator:
                 sig_io = io.BytesIO(sig_bytes)
                 return sig_io
             return None
+        except Exception:
+            return None
+
+    def _generate_qr_code(self):
+        """Generate QR code for contract verification URL."""
+        if not QR_SUPPORT:
+            return None
+        try:
+            # Build the public URL for this contract
+            base_url = getattr(settings, 'SITE_URL', 'https://pos.djezzy.dz')
+            url = f"{base_url}/api/contracts/public/{self.contract.contract_number}/pdf/"
+
+            # Generate QR code
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=2,
+            )
+            qr.add_data(url)
+            qr.make(fit=True)
+
+            # Create image
+            qr_img = qr.make_image(fill_color="black", back_color="white")
+
+            # Convert to BytesIO for ReportLab
+            qr_io = io.BytesIO()
+            qr_img.save(qr_io, format='PNG')
+            qr_io.seek(0)
+
+            return RLImage(qr_io, width=60, height=60)
         except Exception:
             return None
 
@@ -526,12 +563,12 @@ class ContractPDFGenerator:
         return terms_table
 
     def _build_signature_section(self):
-        """Build signature section."""
+        """Build signature section with QR code."""
         # Signature image - larger size to preserve original display
         sig_io = self._load_signature()
         if sig_io:
             try:
-                sig_img = RLImage(sig_io, width=200, height=80)
+                sig_img = RLImage(sig_io, width=180, height=70)
             except:
                 sig_img = Paragraph('[Signature]', ParagraphStyle('SigPlaceholder',
                     fontName='Helvetica', fontSize=9, textColor=self.TEXT_GRAY, alignment=TA_CENTER))
@@ -539,15 +576,15 @@ class ContractPDFGenerator:
             sig_img = Paragraph('[Signature]', ParagraphStyle('SigPlaceholder',
                 fontName='Helvetica', fontSize=9, textColor=self.TEXT_GRAY, alignment=TA_CENTER))
 
-        # Signature box - wider to accommodate larger signature
-        sig_table = Table([[sig_img]], colWidths=[210])
+        # Signature box
+        sig_table = Table([[sig_img]], colWidths=[190])
         sig_table.setStyle(TableStyle([
             ('BOX', (0, 0), (-1, -1), 1, self.BORDER_GRAY),
             ('BACKGROUND', (0, 0), (-1, -1), white),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('TOPPADDING', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
             ('ROUNDEDCORNERS', [4, 4, 4, 4]),
         ]))
 
@@ -559,13 +596,13 @@ class ContractPDFGenerator:
             Paragraph(f"<b>{customer_name}</b>", ParagraphStyle('SigName', fontName='Helvetica-Bold', fontSize=11, textColor=black)),
             Spacer(1, 4),
             Paragraph(f"Date: {formatted_date}", ParagraphStyle('SigDate', fontName='Helvetica', fontSize=10, textColor=black)),
-            Spacer(1, 10),
+            Spacer(1, 8),
         ]
 
         # Confirmation box
         confirm_para = Paragraph("Je confirme que c'est ma carte d'identite nationale",
             ParagraphStyle('ConfirmText', fontName='Helvetica', fontSize=8, textColor=self.GREEN_TEXT))
-        confirm_table = Table([[confirm_para]], colWidths=[200])
+        confirm_table = Table([[confirm_para]], colWidths=[180])
         confirm_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), self.LIGHT_GREEN),
             ('LEFTPADDING', (0, 0), (-1, -1), 8),
@@ -577,13 +614,31 @@ class ContractPDFGenerator:
 
         info_elements.append(confirm_table)
 
+        # QR Code section
+        qr_code = self._generate_qr_code()
+        if qr_code:
+            qr_container = [
+                qr_code,
+                Spacer(1, 4),
+                Paragraph('Scanner pour<br/>telecharger', ParagraphStyle(
+                    'QRLabel', fontName='Helvetica', fontSize=7, textColor=self.TEXT_GRAY, alignment=TA_CENTER
+                ))
+            ]
+            qr_table = Table([[qr_container]], colWidths=[70])
+            qr_table.setStyle(TableStyle([
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ]))
+        else:
+            qr_table = Paragraph('', ParagraphStyle('Empty'))
+
         # Title
         title_para = Paragraph('<b>SIGNATURE DU CLIENT</b>', ParagraphStyle(
             'SigTitle', fontName='Helvetica-Bold', fontSize=12, textColor=black))
 
-        # Main layout - adjusted widths for larger signature
-        main_data = [[sig_table, info_elements]]
-        main_table = Table(main_data, colWidths=[220, 260])
+        # Main layout with 3 columns: signature, info, QR code
+        main_data = [[sig_table, info_elements, qr_table]]
+        main_table = Table(main_data, colWidths=[200, 210, 80])
         main_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),

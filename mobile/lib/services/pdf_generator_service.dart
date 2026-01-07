@@ -4,6 +4,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:flutter/services.dart' show rootBundle;
 import '../models/contract_data.dart';
+import '../config/api_config.dart';
 
 class PDFGeneratorService {
   static Future<Uint8List> generateContract(ContractData contractData) async {
@@ -466,6 +467,9 @@ class PDFGeneratorService {
   }
 
   static pw.Widget _buildSignatureSection(ContractData contractData) {
+    // Generate QR code URL
+    final qrUrl = '${ApiConfig.baseUrl}/contracts/public/${contractData.contractId}/pdf/';
+
     return pw.Container(
       padding: const pw.EdgeInsets.all(16),
       decoration: pw.BoxDecoration(
@@ -488,8 +492,8 @@ class PDFGeneratorService {
             children: [
               // Signature image
               pw.Container(
-                width: 180,
-                height: 70,
+                width: 160,
+                height: 65,
                 decoration: pw.BoxDecoration(
                   border: pw.Border.all(color: PdfColor.fromHex('#CCCCCC')),
                   borderRadius: pw.BorderRadius.circular(4),
@@ -510,7 +514,8 @@ class PDFGeneratorService {
                         ),
                       ),
               ),
-              pw.SizedBox(width: 20),
+              pw.SizedBox(width: 15),
+              // Customer info
               pw.Expanded(
                 child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -529,9 +534,9 @@ class PDFGeneratorService {
                       'Date: ${contractData.formattedDate}',
                       style: const pw.TextStyle(fontSize: 10),
                     ),
-                    pw.SizedBox(height: 10),
+                    pw.SizedBox(height: 8),
                     pw.Container(
-                      padding: const pw.EdgeInsets.all(8),
+                      padding: const pw.EdgeInsets.all(6),
                       decoration: pw.BoxDecoration(
                         color: PdfColor.fromHex('#E8F5E9'),
                         borderRadius: pw.BorderRadius.circular(4),
@@ -539,13 +544,34 @@ class PDFGeneratorService {
                       child: pw.Text(
                         'Je confirme que c\'est ma carte d\'identite nationale',
                         style: const pw.TextStyle(
-                          fontSize: 8,
+                          fontSize: 7,
                           color: PdfColors.green800,
                         ),
                       ),
                     ),
                   ],
                 ),
+              ),
+              pw.SizedBox(width: 10),
+              // QR Code
+              pw.Column(
+                children: [
+                  pw.BarcodeWidget(
+                    barcode: pw.Barcode.qrCode(),
+                    data: qrUrl,
+                    width: 60,
+                    height: 60,
+                  ),
+                  pw.SizedBox(height: 4),
+                  pw.Text(
+                    'Scanner pour\ntelecharger',
+                    style: const pw.TextStyle(
+                      fontSize: 6,
+                      color: PdfColors.grey700,
+                    ),
+                    textAlign: pw.TextAlign.center,
+                  ),
+                ],
               ),
             ],
           ),

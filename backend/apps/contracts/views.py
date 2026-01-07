@@ -1,12 +1,36 @@
 from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from django.http import FileResponse
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Contract
 from .serializers import ContractSerializer, ContractCreateSerializer
 from .services import ContractPDFGenerator
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def public_contract_pdf(request, contract_number):
+    """
+    Public endpoint to download contract PDF via QR code.
+    No authentication required.
+    """
+    contract = get_object_or_404(Contract, contract_number=contract_number)
+
+    # Always regenerate PDF to ensure it has QR code and latest data
+    generator = ContractPDFGenerator(contract)
+    generator.save_to_contract()
+    contract.refresh_from_db()
+
+    # Return PDF file
+    response = FileResponse(
+        contract.pdf_file.open('rb'),
+        content_type='application/pdf'
+    )
+    response['Content-Disposition'] = f'inline; filename="contrat_{contract.contract_number}.pdf"'
+    return response
 
 
 class ContractViewSet(viewsets.ModelViewSet):
