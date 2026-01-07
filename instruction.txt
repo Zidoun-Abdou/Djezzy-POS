@@ -444,3 +444,75 @@ MRZ Scan -> Contact Info Page -> Signature Page -> Contract Preview
 1. `mobile/lib/contract/contact_info_page.dart` (NEW)
 2. `mobile/lib/contract/signature_page.dart`
 3. `mobile/lib/idcard/read_nfc_page.dart`
+
+---
+
+## 2026-01-07: Add OTP Verification Screen for Agent Role (Demo)
+
+### Feature Added
+- OTP verification screen appears after login for users with "agent" role
+- Demo mode: accepts any 6-digit code
+- Admin users bypass OTP and go directly to dashboard
+- Implemented in both web dashboard and mobile app
+
+### Login Flow Changes
+
+#### Mobile App
+```
+LoginPage -> (check role) -> OtpPage (agents) -> OfferSelectionPage
+                          -> OfferSelectionPage (admins)
+```
+
+#### Web Dashboard
+```
+/dashboard/login/ -> (check role) -> /dashboard/otp/ (agents) -> /dashboard/
+                                  -> /dashboard/ (admins)
+```
+
+### Changes Made
+
+#### 1. Mobile OTP Page
+**New File:** `mobile/lib/auth/otp_page.dart`
+- 6-digit OTP input with individual boxes
+- "Verifier" button (accepts any code)
+- "Renvoyer" link (shows snackbar message)
+- Djezzy red theme styling
+
+#### 2. Mobile Login Page
+**Modified:** `mobile/lib/auth/login_page.dart`
+- After successful login, checks `userData['role']`
+- Agents navigate to OtpPage
+- Admins navigate directly to OfferSelectionPage
+
+#### 3. Web OTP Template
+**New File:** `backend/apps/dashboard/templates/dashboard/otp.html`
+- 6-digit OTP input using Alpine.js
+- Auto-focus next input on digit entry
+- Paste support for full OTP code
+- "Renvoyer" link with success message
+- Tailwind CSS styling matching login.html
+
+#### 4. Backend OTP View
+**Modified:** `backend/apps/dashboard/views.py`
+- Added `otp_view()` function:
+  - GET: renders OTP template
+  - POST: accepts any 6-digit code, sets session['otp_verified'] = True
+  - Handles resend request (shows success message)
+- Updated `login_view()`:
+  - After login, redirects agents to OTP page
+  - Admins go directly to dashboard
+- Updated `logout_view()`:
+  - Clears `otp_verified` session on logout
+- Updated `index_view()`:
+  - Redirects agents to OTP if not verified
+
+#### 5. URL Route
+**Modified:** `backend/apps/dashboard/urls.py`
+- Added: `path('otp/', views.otp_view, name='otp')`
+
+### Files Modified
+1. `mobile/lib/auth/otp_page.dart` (NEW)
+2. `mobile/lib/auth/login_page.dart`
+3. `backend/apps/dashboard/templates/dashboard/otp.html` (NEW)
+4. `backend/apps/dashboard/views.py`
+5. `backend/apps/dashboard/urls.py`

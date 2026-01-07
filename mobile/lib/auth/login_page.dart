@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import '../services/auth_service.dart';
 import '../contract/offer_selection_page.dart';
+import 'otp_page.dart';
 
 class LoginPage extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -49,11 +50,25 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     if (result.success) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => OfferSelectionPage(cameras: widget.cameras),
-        ),
-      );
+      // Check user role - agents need OTP verification
+      final userData = _authService.userData;
+      final userRole = userData?['role'] ?? 'agent';
+
+      if (userRole == 'admin') {
+        // Admin bypasses OTP
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => OfferSelectionPage(cameras: widget.cameras),
+          ),
+        );
+      } else {
+        // Agent goes to OTP verification
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => OtpPage(cameras: widget.cameras),
+          ),
+        );
+      }
     } else {
       setState(() {
         _errorMessage = result.error;

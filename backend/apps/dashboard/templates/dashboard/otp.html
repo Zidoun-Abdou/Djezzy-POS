@@ -1,0 +1,186 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification OTP - Djezzy POS</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'djezzy': '#ED1C24',
+                        'djezzy-dark': '#C41820',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        /* OTP Input styling */
+        .otp-input {
+            width: 48px;
+            height: 56px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+        .otp-input:focus {
+            border-color: #ED1C24;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(237, 28, 36, 0.1);
+        }
+        .otp-input:not(:placeholder-shown) {
+            border-color: #ED1C24;
+            background-color: rgba(237, 28, 36, 0.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center p-4">
+    <div class="w-full max-w-md" x-data="otpForm()">
+        <!-- Logo Card -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-djezzy px-8 py-6 text-center">
+                <img src="{% static 'dashboard/images/djezzy_logo.png' %}" alt="Djezzy" class="h-16 mx-auto mb-2">
+                <p class="text-white/80">Verification OTP</p>
+            </div>
+
+            <!-- Form -->
+            <form method="POST" action="{% url 'dashboard:otp' %}" class="p-8" @submit="loading = true">
+                {% csrf_token %}
+
+                <h2 class="text-xl font-semibold text-gray-800 mb-2 text-center">Verification</h2>
+                <p class="text-gray-500 text-sm text-center mb-8">
+                    Un code de verification a ete envoye<br>a votre numero de telephone
+                </p>
+
+                <!-- Error Message -->
+                {% if error %}
+                <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-red-700 text-sm">{{ error }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Success Message (for resend) -->
+                {% if message %}
+                <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span class="text-green-700 text-sm">{{ message }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- OTP Input -->
+                <div class="flex justify-center gap-3 mb-8">
+                    <template x-for="(digit, index) in otp" :key="index">
+                        <input type="text"
+                               maxlength="1"
+                               class="otp-input"
+                               :value="digit"
+                               @input="handleInput($event, index)"
+                               @keydown="handleKeydown($event, index)"
+                               @paste="handlePaste($event)"
+                               x-ref="otpInput">
+                    </template>
+                </div>
+
+                <!-- Hidden input to submit the full OTP -->
+                <input type="hidden" name="otp" :value="otp.join('')">
+
+                <!-- Submit Button -->
+                <button type="submit"
+                        :disabled="loading || !isComplete"
+                        :class="{ 'opacity-75 cursor-wait': loading, 'opacity-50 cursor-not-allowed': !isComplete && !loading }"
+                        class="w-full bg-djezzy text-white py-3 px-4 rounded-lg font-medium hover:bg-djezzy-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-djezzy transition-colors flex items-center justify-center">
+                    <template x-if="loading">
+                        <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </template>
+                    <span x-text="loading ? 'Verification...' : 'Verifier'"></span>
+                </button>
+
+                <!-- Resend Link -->
+                <div class="mt-6 text-center">
+                    <span class="text-gray-500 text-sm">Vous n'avez pas recu le code? </span>
+                    <a href="{% url 'dashboard:otp' %}?resend=1" class="text-djezzy text-sm font-medium hover:underline">
+                        Renvoyer
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <p class="text-center text-gray-500 text-sm mt-6">
+            &copy; 2024 Djezzy Algeria. Tous droits reserves.
+        </p>
+    </div>
+
+    <script>
+        function otpForm() {
+            return {
+                otp: ['', '', '', '', '', ''],
+                loading: false,
+
+                get isComplete() {
+                    return this.otp.every(digit => digit !== '');
+                },
+
+                handleInput(event, index) {
+                    const value = event.target.value.replace(/[^0-9]/g, '');
+                    this.otp[index] = value;
+
+                    if (value && index < 5) {
+                        const inputs = document.querySelectorAll('.otp-input');
+                        inputs[index + 1].focus();
+                    }
+                },
+
+                handleKeydown(event, index) {
+                    if (event.key === 'Backspace' && !this.otp[index] && index > 0) {
+                        const inputs = document.querySelectorAll('.otp-input');
+                        inputs[index - 1].focus();
+                    }
+                },
+
+                handlePaste(event) {
+                    event.preventDefault();
+                    const paste = (event.clipboardData || window.clipboardData).getData('text');
+                    const digits = paste.replace(/[^0-9]/g, '').slice(0, 6).split('');
+
+                    digits.forEach((digit, index) => {
+                        if (index < 6) {
+                            this.otp[index] = digit;
+                        }
+                    });
+
+                    const inputs = document.querySelectorAll('.otp-input');
+                    const focusIndex = Math.min(digits.length, 5);
+                    inputs[focusIndex].focus();
+                }
+            };
+        }
+    </script>
+</body>
+</html>
