@@ -516,3 +516,14 @@ LoginPage -> (check role) -> OtpPage (agents) -> OfferSelectionPage
 3. `backend/apps/dashboard/templates/dashboard/otp.html` (NEW)
 4. `backend/apps/dashboard/views.py`
 5. `backend/apps/dashboard/urls.py`
+
+---
+
+## 2026-01-07: Increase Signature Pad Size for Better UX
+
+### Change Made
+- Increased signature canvas height from 200px to 280px
+- Provides more comfortable space for handwriting signatures
+
+### File Modified
+1. `mobile/lib/contract/signature_page.dart` - Line 243
