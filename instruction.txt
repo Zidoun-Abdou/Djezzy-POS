@@ -315,3 +315,51 @@ python-bidi>=0.4.2
 4. `backend/apps/contracts/services/pdf_generator.py` - Added Arabic birth place + blood type rows
 5. `backend/apps/contracts/views.py` - Always regenerate PDF on download
 6. `mobile/lib/services/api_service.dart` - Send new fields to backend
+
+---
+
+## 2026-01-07: Add QR Code to Contract PDFs
+
+### Feature Added
+- Each contract PDF now has a unique QR code in the signature section
+- When scanned, the QR code directly downloads the contract PDF
+- Public access - no authentication required
+
+### Implementation Details
+
+#### 1. Public PDF Download Endpoint
+- **Endpoint:** `GET /api/contracts/public/{contract_number}/pdf/`
+- **Permission:** AllowAny (no authentication)
+- **Response:** PDF file download (inline)
+
+#### 2. Backend QR Code Generation
+- Added `qrcode[pil]>=7.0` library to requirements.txt
+- QR code generated in `_generate_qr_code()` method
+- URL format: `https://pos.djezzy.dz/api/contracts/public/{contract_number}/pdf/`
+- QR code size: 60x60px
+- Placed in signature section (bottom right)
+
+#### 3. Mobile QR Code Generation
+- Uses built-in `pw.BarcodeWidget` from pdf package
+- Same URL format as backend
+- Same placement in signature section
+
+### QR Code Design
+```
+┌─────────────────────────────────────────────────┐
+│  SIGNATURE DU CLIENT                            │
+│  ┌──────────┐                           ┌────┐  │
+│  │ [Sign]   │  Customer Name            │ QR │  │
+│  │          │  Date: XX/XX/XXXX         │CODE│  │
+│  └──────────┘  ✓ Confirmed              └────┘  │
+│                                 Scanner pour    │
+│                                 telecharger     │
+└─────────────────────────────────────────────────┘
+```
+
+### Files Modified
+1. `backend/requirements.txt` - Added qrcode[pil]
+2. `backend/apps/contracts/urls.py` - Added public PDF route
+3. `backend/apps/contracts/views.py` - Added public_contract_pdf view
+4. `backend/apps/contracts/services/pdf_generator.py` - Added QR code generation
+5. `mobile/lib/services/pdf_generator_service.dart` - Added QR code to PDF
