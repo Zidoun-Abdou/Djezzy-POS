@@ -240,7 +240,7 @@ class _SignaturePageState extends State<SignaturePage>
 
                 // Signature Pad
                 Container(
-                  height: 200,
+                  height: 280,
                   decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
