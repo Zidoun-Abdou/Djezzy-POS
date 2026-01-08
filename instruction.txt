@@ -527,3 +527,25 @@ LoginPage -> (check role) -> OtpPage (agents) -> OfferSelectionPage
 
 ### File Modified
 1. `mobile/lib/contract/signature_page.dart` - Line 243
+
+---
+
+## 2026-01-08: Add Workflow Slide to Presentation
+
+### Feature Added
+- New slide showing the complete app workflow diagram
+- Visual representation of the user journey
+
+### Workflow Steps Shown
+```
+Login -> OTP -> Offres -> Numero -> Scan MRZ -> NFC Read -> Contact -> Signature -> PDF Contract
+```
+
+### Key Technologies Highlighted
+1. **MRZ Scanner** - Camera + ML Kit
+2. **NFC** - DG2, DG7, DG11, DG12
+3. **Signature** - Canvas numerique
+4. **QR Code** - Verification contrat
+
+### File Modified
+1. `Djezzy_POS_Presentation.pptx` - Added workflow slide at position 2
